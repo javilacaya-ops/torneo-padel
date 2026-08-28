@@ -96,6 +96,7 @@
   .note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:2px;}
   .hidden{display:none;}
   .banner{background:#FFF8DA;border:1px solid var(--gold-dark);border-radius:10px;padding:9px 11px;font-size:11.5px;color:#5A4A05;margin-bottom:12px;}
+  .sync-box{width:100%;min-height:90px;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:monospace;font-size:11px;color:var(--text);resize:vertical;word-break:break-all;}
 </style>
 </head>
 <body>
@@ -111,6 +112,7 @@
     <div class="tab active" data-tab="config">Config</div>
     <div class="tab" data-tab="calendario">Calendario</div>
     <div class="tab" data-tab="ranking">Ranking</div>
+    <div class="tab" data-tab="sync">Sincronizar</div>
   </div>
 
   <div id="tab-config">
@@ -158,6 +160,31 @@
         <tbody id="rankBody"></tbody>
       </table>
       <div class="note" style="margin-top:8px;">Ordenado por relación GF/GC (games ganados ÷ games perdidos). PJ = partidos jugados.</div>
+    </div>
+  </div>
+
+  <div id="tab-sync" class="hidden">
+    <div class="card">
+      <h2>Enviar mis datos a otro celular</h2>
+      <div class="note">Genera un código con todo lo que tienes cargado (jugadores, calendario y resultados) y envíalo por WhatsApp, Bluetooth o el medio que prefieras. No necesita internet, solo compartir el texto.</div>
+      <div class="actions">
+        <button id="btnExport" type="button">Generar código para compartir</button>
+      </div>
+      <textarea id="exportBox" class="sync-box hidden" readonly></textarea>
+      <div class="actions hidden" id="exportActions">
+        <button class="secondary" id="btnCopyExport" type="button">Copiar al portapapeles</button>
+      </div>
+      <div class="note" id="exportStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Recibir datos de otro celular</h2>
+      <div class="note">Pega aquí el código que te compartieron. Esto <b>reemplaza por completo</b> los datos de este celular (jugadores, calendario y resultados).</div>
+      <textarea id="importBox" class="sync-box" placeholder="Pega aquí el código recibido..."></textarea>
+      <div class="actions">
+        <button id="btnImport" type="button">Actualizar mis datos con este código</button>
+      </div>
+      <div class="note" id="importStatus"></div>
     </div>
   </div>
 
@@ -445,7 +472,7 @@ document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
-    ['config','calendario','ranking'].forEach(id=>{
+    ['config','calendario','ranking','sync'].forEach(id=>{
       document.getElementById('tab-'+id).classList.toggle('hidden', id!==t.dataset.tab);
     });
   });
@@ -505,6 +532,66 @@ if('serviceWorker' in navigator && (location.protocol==='https:' || location.pro
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
+
+// ---------- Sincronizar entre celulares (codigo manual, sin servidor) ----------
+function encodeState(obj){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+function decodeState(code){
+  return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+}
+function isValidTournamentState(obj){
+  return obj && typeof obj.N === 'number' && typeof obj.courts === 'number' &&
+         obj.players && obj.physRounds && obj.scores;
+}
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const code = encodeState(state);
+  const box = document.getElementById('exportBox');
+  box.value = code;
+  box.classList.remove('hidden');
+  document.getElementById('exportActions').classList.remove('hidden');
+  document.getElementById('exportStatus').textContent = 'Código generado (' + code.length + ' caracteres). Cópialo y compártelo.';
+});
+
+document.getElementById('btnCopyExport').addEventListener('click', async ()=>{
+  const box = document.getElementById('exportBox');
+  box.select();
+  box.setSelectionRange(0, box.value.length);
+  let copied = false;
+  try{
+    await navigator.clipboard.writeText(box.value);
+    copied = true;
+  }catch(e){
+    try{ copied = document.execCommand('copy'); }catch(e2){}
+  }
+  document.getElementById('exportStatus').textContent = copied
+    ? 'Copiado al portapapeles. Ya puedes pegarlo en WhatsApp u otro chat.'
+    : 'No se pudo copiar automático: el texto ya está seleccionado, usa copiar manual (mantén presionado > Copiar).';
+});
+
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  const raw = document.getElementById('importBox').value;
+  const statusEl = document.getElementById('importStatus');
+  if(!raw.trim()){ statusEl.textContent = 'Pega primero el código recibido.'; return; }
+  let parsed;
+  try{
+    parsed = decodeState(raw);
+  }catch(e){
+    statusEl.textContent = 'El código no es válido o está incompleto. Revisa que lo hayas copiado completo.';
+    return;
+  }
+  if(!isValidTournamentState(parsed)){
+    statusEl.textContent = 'El código no corresponde a datos de este torneo.';
+    return;
+  }
+  if(!confirm('Esto reemplazará TODOS tus datos actuales (jugadores, calendario y resultados) por los del código recibido. ¿Continuar?')) return;
+  state = parsed;
+  saveState();
+  renderAll();
+  statusEl.textContent = 'Datos actualizados correctamente.';
+  document.getElementById('importBox').value = '';
+});
 </script>
 </body>
 </html>
