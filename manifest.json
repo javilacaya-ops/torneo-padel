@@ -1,0 +1,15 @@
+{
+  "name": "Control de Torneo de Pádel",
+  "short_name": "Torneo Pádel",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F4EF",
+  "theme_color": "#1F2937",
+  "description": "Calendario, control de score y ranking en vivo para torneos de pádel por parejas (12, 14 o 16 jugadores).",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

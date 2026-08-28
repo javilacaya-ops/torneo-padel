@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Control de Torneo de Pádel</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F2937">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Torneo Pádel">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  html,body{-webkit-tap-highlight-color:transparent;}
+  input,select,button{font-size:16px;}
+  body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+  :root{
+    --navy:#1F2937;
+    --navy-2:#111827;
+    --gold:#F8CF18;
+    --gold-dark:#B8960B;
+    --bg:#F5F4EF;
+    --card:#FFFFFF;
+    --line:#E4E2D8;
+    --text:#20232A;
+    --muted:#6B7280;
+    --ok:#1D9E75;
+    --err:#D85A30;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;}
+  .app{max-width:480px;margin:0 auto;padding:14px 12px 60px;}
+  .topbar{background:var(--navy);color:#fff;border-radius:14px;padding:16px 16px 14px;margin-bottom:14px;}
+  .topbar h1{margin:0 0 2px;font-size:17px;font-weight:700;letter-spacing:.2px;}
+  .topbar .sub{font-size:12px;color:#C9CDD6;}
+  .stripe{height:4px;background:var(--gold);border-radius:2px;margin-top:10px;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:12px;}
+  .tab{flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-size:12.5px;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--muted);}
+  .tab.active{background:var(--navy);color:var(--gold);border-color:var(--navy);}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .card h2{font-size:14px;margin:0 0 10px;color:var(--navy);}
+  .row{display:flex;gap:8px;align-items:center;}
+  .row + .row{margin-top:8px;}
+
+  select, input[type=text], input[type=number]{
+    font-family:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:14px;background:#fff;color:var(--text);
+  }
+  select{width:100%;}
+  input[type=text]{width:100%;}
+
+  .players-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .players-grid .pn{font-size:11px;color:var(--muted);margin-bottom:2px;display:block;}
+
+  button{font-family:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:10px 12px;font-size:13.5px;font-weight:600;}
+  button.secondary{background:#fff;color:var(--navy);}
+  button.danger{background:#fff;color:var(--err);border-color:var(--err);}
+  button:active{transform:scale(0.98);}
+  .actions{display:flex;gap:8px;margin-top:10px;}
+  .actions button{flex:1;}
+
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .metric{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+  .metric .lbl{font-size:11px;color:var(--muted);}
+  .metric .val{font-size:19px;font-weight:700;color:var(--navy);}
+
+  .round{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .round-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .round-head .rn{font-weight:700;font-size:13px;color:var(--navy);}
+  .round-head .rt{font-size:11px;color:var(--muted);}
+  .match{border-top:1px dashed var(--line);padding-top:8px;margin-top:8px;}
+  .match:first-child{border-top:none;padding-top:0;margin-top:0;}
+  .match .court{display:inline-block;font-size:10px;font-weight:700;color:var(--gold-dark);background:#FFF8DA;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
+  .match .filler{display:inline-block;font-size:10px;font-weight:700;color:var(--err);background:#FBE7E0;border-radius:6px;padding:2px 7px;margin-left:6px;}
+  .pair-line{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;}
+  .pair-names{flex:1;}
+  .score-input{width:44px;height:32px;text-align:center;font-size:14px;}
+  .vs{font-size:11px;color:var(--muted);text-align:center;margin:1px 0;}
+  .status{font-size:10.5px;text-align:right;margin-top:4px;}
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--err);}
+  .status.pending{color:var(--muted);}
+
+  table.rank{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.rank th{text-align:left;font-size:10.5px;color:var(--muted);font-weight:600;padding:5px 4px;border-bottom:1px solid var(--line);}
+  table.rank td{padding:6px 4px;border-bottom:1px solid var(--line);}
+  table.rank td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pos{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#EEE;color:#555;}
+  .pos.p1{background:var(--gold);color:var(--navy-2);}
+  .pos.p2{background:#D9DCE3;color:var(--navy-2);}
+  .pos.p3{background:#E7C7A3;color:#5A3A17;}
+
+  .note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:2px;}
+  .hidden{display:none;}
+  .banner{background:#FFF8DA;border:1px solid var(--gold-dark);border-radius:10px;padding:9px 11px;font-size:11.5px;color:#5A4A05;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <h1>Control de torneo de pádel</h1>
+    <div class="sub">Rotación de parejas · cada jugador con todos los demás</div>
+    <div class="stripe"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="config">Config</div>
+    <div class="tab" data-tab="calendario">Calendario</div>
+    <div class="tab" data-tab="ranking">Ranking</div>
+  </div>
+
+  <div id="tab-config">
+    <div class="card">
+      <h2>Número de inscritos</h2>
+      <select id="playerCount">
+        <option value="12">12 jugadores</option>
+        <option value="14">14 jugadores</option>
+        <option value="16" selected>16 jugadores</option>
+      </select>
+      <div class="note" id="formatSummary" style="margin-top:8px;"></div>
+      <div class="actions">
+        <button id="btnGenerate">Generar torneo</button>
+        <button class="danger" id="btnReset" type="button">Reiniciar todo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Jugadores</h2>
+      <div class="players-grid" id="playersGrid"></div>
+    </div>
+  </div>
+
+  <div id="tab-calendario" class="hidden">
+    <div class="metrics" id="metricsBox"></div>
+    <div id="fillerBanner" class="banner hidden"></div>
+    <div id="roundsList"></div>
+  </div>
+
+  <div id="tab-ranking" class="hidden">
+    <div class="card">
+      <h2>Clasificación individual</h2>
+      <table class="rank">
+        <thead><tr><th>#</th><th>Jugador</th><th style="text-align:right">PJ</th><th style="text-align:right">GF</th><th style="text-align:right">GC</th><th style="text-align:right">Dif</th><th style="text-align:right">GF/GC</th></tr></thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+      <div class="note" style="margin-top:8px;">Ordenado por relación GF/GC (games ganados ÷ games perdidos). PJ = partidos jugados.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'padel-tournament-state-v1';
+let state = null;
+
+function circleFactorization(N){
+  const others = [];
+  for(let i=1;i<N;i++) others.push(i);
+  const rounds = [];
+  const m = N-1;
+  for(let k=0;k<m;k++){
+    const round = [[N, others[k % m]]];
+    for(let j=1;j<=(N/2-1);j++){
+      const a = others[(k+j)%m];
+      const b = others[((k-j)%m+m*10)%m];
+      round.push([a,b]);
+    }
+    rounds.push(round);
+  }
+  return rounds;
+}
+
+function buildMatches(rounds){
+  let queue = [];
+  rounds.forEach(r=>r.forEach(p=>queue.push(p)));
+  const matches = [];
+  let fillerCount = 0;
+  while(queue.length>0){
+    const p1 = queue.shift();
+    let idx = -1;
+    for(let i=0;i<queue.length;i++){
+      const p2 = queue[i];
+      if(p2[0]!==p1[0] && p2[0]!==p1[1] && p2[1]!==p1[0] && p2[1]!==p1[1]){ idx=i; break; }
+    }
+    if(idx===-1){
+      let fillerPartner = null;
+      outer:
+      for(const m of matches){
+        for(const p of [m.a, m.b]){
+          if(p[0]!==p1[0] && p[0]!==p1[1] && p[1]!==p1[0] && p[1]!==p1[1]){ fillerPartner = p; break outer; }
+        }
+      }
+      matches.push({a:p1, b:fillerPartner || p1, filler:true});
+      fillerCount++;
+    } else {
+      const p2 = queue.splice(idx,1)[0];
+      matches.push({a:p1, b:p2, filler:false});
+    }
+  }
+  return {matches, fillerCount};
+}
+
+function assignRounds(matches, courts){
+  const rounds = [];
+  const remaining = matches.slice();
+  while(remaining.length>0){
+    const roundMatches = [];
+    const used = new Set();
+    for(let i=0;i<remaining.length && roundMatches.length<courts;i++){
+      const m = remaining[i];
+      const ps = [...m.a, ...m.b];
+      if(ps.every(p=>!used.has(p))){
+        roundMatches.push(m);
+        ps.forEach(p=>used.add(p));
+        remaining.splice(i,1);
+        i--;
+      }
+    }
+    rounds.push(roundMatches);
+  }
+  return rounds;
+}
+
+function buildSchedule(N){
+  const rounds = circleFactorization(N);
+  const {matches, fillerCount} = buildMatches(rounds);
+  const physRounds = assignRounds(matches, 2);
+  return {physRounds, totalMatches: matches.length, fillerCount};
+}
+
+function defaultState(N){
+  const {physRounds, totalMatches, fillerCount} = buildSchedule(N);
+  const players = {};
+  for(let i=1;i<=N;i++) players[i] = 'Jugador ' + i;
+  const scores = {};
+  physRounds.forEach((round, ri)=>{
+    round.forEach((m, ci)=>{
+      scores[ri+'-'+ci] = {ga:'', gb:''};
+    });
+  });
+  return {N, players, physRounds, totalMatches, fillerCount, scores};
+}
+
+async function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+async function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function playerName(num){ return state.players[num] || ('Jugador '+num); }
+
+function renderFormatSummary(N){
+  const minutesPerRound = 25;
+  const {totalMatches, fillerCount} = buildSchedule(N);
+  const rounds = Math.ceil(totalMatches/2);
+  const totalMin = rounds*minutesPerRound;
+  const h = Math.floor(totalMin/60), m = totalMin%60;
+  document.getElementById('formatSummary').innerHTML =
+    N + ' jugadores &rarr; ' + totalMatches + ' partidos &middot; ' + rounds + ' rondas (2 canchas) &middot; ' +
+    '&asymp; ' + h + 'h' + (m? ' '+m+'min':'') + ' de juego' +
+    (fillerCount>0 ? '<br>Incluye ' + fillerCount + ' partido(s) de relleno (repetición) por número impar de parejas.' : '');
+}
+
+function renderPlayersGrid(){
+  const grid = document.getElementById('playersGrid');
+  grid.innerHTML = '';
+  for(let i=1;i<=state.N;i++){
+    const wrap = document.createElement('div');
+    const label = document.createElement('span');
+    label.className='pn'; label.textContent = 'Jugador '+i;
+    const input = document.createElement('input');
+    input.type='text'; input.value = state.players[i]; input.dataset.num = i;
+    input.addEventListener('input', (e)=>{
+      state.players[e.target.dataset.num] = e.target.value || ('Jugador '+e.target.dataset.num);
+      renderCalendario(); renderRanking(); saveState();
+    });
+    wrap.appendChild(label); wrap.appendChild(input);
+    grid.appendChild(wrap);
+  }
+}
+
+function renderMetrics(){
+  const box = document.getElementById('metricsBox');
+  const rounds = state.physRounds.length;
+  const minutesPerRound = 25;
+  const totalMin = rounds*minutesPerRound;
+  const h = Math.floor(totalMin/60), m = totalMin%60;
+  box.innerHTML =
+    '<div class="metric"><div class="lbl">Partidos totales</div><div class="val">'+state.totalMatches+'</div></div>' +
+    '<div class="metric"><div class="lbl">Rondas (2 canchas)</div><div class="val">'+rounds+'</div></div>' +
+    '<div class="metric"><div class="lbl">Duración de juego</div><div class="val">'+h+'h'+(m?(' '+m+'m'):'')+'</div></div>' +
+    '<div class="metric"><div class="lbl">Jugadores</div><div class="val">'+state.N+'</div></div>';
+
+  const banner = document.getElementById('fillerBanner');
+  if(state.fillerCount>0){
+    banner.classList.remove('hidden');
+    banner.textContent = 'Este calendario incluye ' + state.fillerCount + ' partido(s) marcados como "relleno": con ' + state.N + ' jugadores el número de parejas necesarias es impar, así que una pareja repite partido para completar cancha.';
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
+function scoreStatus(sc){
+  if(sc.ga==='' || sc.gb==='') return {cls:'pending', text:'Pendiente'};
+  const a = Number(sc.ga), b = Number(sc.gb);
+  if(a+b!==4) return {cls:'err', text:'Debe sumar 4 games'};
+  return {cls:'ok', text:'Registrado'};
+}
+
+function renderCalendario(){
+  const list = document.getElementById('roundsList');
+  list.innerHTML = '';
+  state.physRounds.forEach((round, ri)=>{
+    const div = document.createElement('div');
+    div.className='round';
+    const head = document.createElement('div');
+    head.className='round-head';
+    head.innerHTML = '<span class="rn">Ronda '+(ri+1)+'</span><span class="rt">'+round.length+' cancha(s)</span>';
+    div.appendChild(head);
+
+    round.forEach((m, ci)=>{
+      const key = ri+'-'+ci;
+      const sc = state.scores[key];
+      const st = scoreStatus(sc);
+      const mdiv = document.createElement('div');
+      mdiv.className='match';
+      mdiv.innerHTML =
+        '<span class="court">Cancha '+(ci+1)+'</span>' + (m.filler? '<span class="filler">Relleno</span>':'') +
+        '<div class="pair-line"><span class="pair-names">'+playerName(m.a[0])+' / '+playerName(m.a[1])+'</span>' +
+        '<input type="number" min="0" max="4" class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="ga" value="'+sc.ga+'"></div>' +
+        '<div class="vs">vs</div>' +
+        '<div class="pair-line"><span class="pair-names">'+playerName(m.b[0])+' / '+playerName(m.b[1])+'</span>' +
+        '<input type="number" min="0" max="4" class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="gb" value="'+sc.gb+'"></div>' +
+        '<div class="status '+st.cls+'">'+st.text+'</div>';
+      div.appendChild(mdiv);
+    });
+    list.appendChild(div);
+  });
+
+  list.querySelectorAll('.score-input').forEach(inp=>{
+    inp.addEventListener('input', (e)=>{
+      const ri = e.target.dataset.round, ci = e.target.dataset.court, side = e.target.dataset.side;
+      const key = ri+'-'+ci;
+      let v = e.target.value;
+      if(v!=='' ){ v = Math.max(0, Math.min(4, Math.round(Number(v)))); }
+      state.scores[key][side] = v;
+      renderCalendarioStatusOnly();
+      renderRanking();
+      saveState();
+    });
+  });
+}
+
+function renderCalendarioStatusOnly(){
+  document.querySelectorAll('.match').forEach((mdiv, flatIdx)=>{});
+  renderCalendario();
+}
+
+function computeRanking(){
+  const gf = {}, gc = {}, pj = {};
+  for(let i=1;i<=state.N;i++){ gf[i]=0; gc[i]=0; pj[i]=0; }
+  state.physRounds.forEach((round, ri)=>{
+    round.forEach((m, ci)=>{
+      const sc = state.scores[ri+'-'+ci];
+      if(sc.ga==='' || sc.gb==='') return;
+      const a = Number(sc.ga), b = Number(sc.gb);
+      m.a.forEach(p=>{ gf[p]+=a; gc[p]+=b; pj[p]+=1; });
+      m.b.forEach(p=>{ gf[p]+=b; gc[p]+=a; pj[p]+=1; });
+    });
+  });
+  const rows = [];
+  for(let i=1;i<=state.N;i++){
+    const ratio = gc[i]>0 ? gf[i]/gc[i] : (gf[i]>0 ? gf[i] : 0);
+    rows.push({num:i, name:playerName(i), pj:pj[i], gf:gf[i], gc:gc[i], diff:gf[i]-gc[i], ratio});
+  }
+  rows.sort((a,b)=> b.ratio-a.ratio || b.diff-a.diff);
+  return rows;
+}
+
+function renderRanking(){
+  const rows = computeRanking();
+  const body = document.getElementById('rankBody');
+  body.innerHTML = '';
+  rows.forEach((r, idx)=>{
+    const tr = document.createElement('tr');
+    const posClass = idx===0?'pos p1':(idx===1?'pos p2':(idx===2?'pos p3':'pos'));
+    tr.innerHTML =
+      '<td><span class="'+posClass+'">'+(idx+1)+'</span></td>' +
+      '<td>'+r.name+'</td>' +
+      '<td class="num">'+r.pj+'</td>' +
+      '<td class="num">'+r.gf+'</td>' +
+      '<td class="num">'+r.gc+'</td>' +
+      '<td class="num">'+(r.diff>0?'+':'')+r.diff+'</td>' +
+      '<td class="num">'+r.ratio.toFixed(2)+'</td>';
+    body.appendChild(tr);
+  });
+}
+
+function renderAll(){
+  document.getElementById('playerCount').value = state.N;
+  renderFormatSummary(state.N);
+  renderPlayersGrid();
+  renderMetrics();
+  renderCalendario();
+  renderRanking();
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    ['config','calendario','ranking'].forEach(id=>{
+      document.getElementById('tab-'+id).classList.toggle('hidden', id!==t.dataset.tab);
+    });
+  });
+});
+
+document.getElementById('playerCount').addEventListener('change', (e)=>{
+  renderFormatSummary(Number(e.target.value));
+});
+
+document.getElementById('btnGenerate').addEventListener('click', ()=>{
+  const N = Number(document.getElementById('playerCount').value);
+  if(state && state.N===N){
+    const hasScores = Object.values(state.scores).some(s=>s.ga!=='' || s.gb!=='');
+    if(hasScores && !confirm('Ya hay resultados cargados para '+N+' jugadores. ¿Generar de nuevo borrará el calendario y los scores actuales?')) return;
+  } else if(state){
+    if(!confirm('Cambiar a '+N+' jugadores reiniciará el calendario y los resultados. ¿Continuar?')) return;
+  }
+  const prevNames = state ? {...state.players} : null;
+  state = defaultState(N);
+  if(prevNames){
+    for(let i=1;i<=N;i++){ if(prevNames[i]) state.players[i] = prevNames[i]; }
+  }
+  saveState();
+  renderAll();
+  document.querySelector('.tab[data-tab="calendario"]').click();
+});
+
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(!confirm('Esto borra nombres, calendario y resultados. ¿Continuar?')) return;
+  const N = Number(document.getElementById('playerCount').value) || 16;
+  state = defaultState(N);
+  saveState();
+  renderAll();
+});
+
+(async function init(){
+  const loaded = await loadState();
+  state = loaded || defaultState(16);
+  renderAll();
+})();
+
+if('serviceWorker' in navigator && (location.protocol==='https:' || location.protocol==='http:')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
