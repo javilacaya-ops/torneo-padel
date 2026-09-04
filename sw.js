@@ -1,4 +1,4 @@
-const CACHE_NAME = 'torneo-padel-v3';
+const CACHE_NAME = 'torneo-padel-v4';
 const ASSETS = [
   './',
   './index.html',
