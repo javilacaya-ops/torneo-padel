@@ -37,6 +37,9 @@
   .topbar .sub{font-size:12px;color:#C9CDD6;}
   .stripe{height:4px;background:var(--gold);border-radius:2px;margin-top:10px;}
 
+  .tsel{margin-bottom:12px;}
+  .tsel select{width:100%;}
+
   .tabs{display:flex;gap:6px;margin-bottom:12px;}
   .tab{flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-size:12.5px;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--muted);}
   .tab.active{background:var(--navy);color:var(--gold);border-color:var(--navy);}
@@ -46,11 +49,11 @@
   .row{display:flex;gap:8px;align-items:center;}
   .row + .row{margin-top:8px;}
 
-  select, input[type=text], input[type=number]{
+  select, input[type=text], input[type=number], input[type=password]{
     font-family:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:14px;background:#fff;color:var(--text);
   }
   select{width:100%;}
-  input[type=text]{width:100%;}
+  input[type=text], input[type=password]{width:100%;}
 
   .players-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .players-grid .pn{font-size:11px;color:var(--muted);margin-bottom:2px;display:block;}
@@ -58,6 +61,7 @@
   button{font-family:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:10px 12px;font-size:13.5px;font-weight:600;}
   button.secondary{background:#fff;color:var(--navy);}
   button.danger{background:#fff;color:var(--err);border-color:var(--err);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
   button:active{transform:scale(0.98);}
   .actions{display:flex;gap:8px;margin-top:10px;}
   .actions button{flex:1;}
@@ -84,6 +88,11 @@
   .status.err{color:var(--err);}
   .status.pending{color:var(--muted);}
 
+  .set-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);margin:4px 0;}
+  .set-row span:first-child{width:64px;}
+  .set-row .score-input{width:38px;height:28px;}
+  .set-row.tb{color:var(--gold-dark);font-weight:600;}
+
   table.rank{width:100%;border-collapse:collapse;font-size:12.5px;}
   table.rank th{text-align:left;font-size:10.5px;color:var(--muted);font-weight:600;padding:5px 4px;border-bottom:1px solid var(--line);}
   table.rank td{padding:6px 4px;border-bottom:1px solid var(--line);}
@@ -97,28 +106,56 @@
   .hidden{display:none;}
   .banner{background:#FFF8DA;border:1px solid var(--gold-dark);border-radius:10px;padding:9px 11px;font-size:11.5px;color:#5A4A05;margin-bottom:12px;}
   .sync-box{width:100%;min-height:90px;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:monospace;font-size:11px;color:var(--text);resize:vertical;word-break:break-all;}
+
+  .tlist-item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;}
+  .tlist-item.active{border-color:var(--gold-dark);background:#FFFBEC;}
+  .tlist-item .tname{font-weight:700;font-size:13.5px;color:var(--navy);}
+  .tlist-item .tmeta{font-size:11px;color:var(--muted);margin:2px 0 8px;}
+  .tlist-item .tactions{display:flex;gap:6px;}
+  .tlist-item .tactions button{flex:1;padding:7px;font-size:12px;}
+  .badge{display:inline-block;font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;margin-left:6px;}
+  .badge.americano{background:#E4EEFB;color:#1F5FA8;}
+  .badge.regular{background:#EAF7EE;color:#1D8A4E;}
 </style>
 </head>
 <body>
-<div class="app">
+
+<div class="app" id="appRoot">
 
   <div class="topbar">
     <h1>Control de torneo de pádel</h1>
-    <div class="sub">10-16 jugadores · 2-4 canchas · pareja con todos al menos una vez</div>
+    <div class="sub">10-20 jugadores · 2-4 canchas · americano o regular</div>
     <div class="stripe"></div>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="config">Config</div>
+  <div class="tsel">
+    <select id="tournamentSelector"></select>
+  </div>
+
+  <div class="tabs" id="tabsBar">
+    <div class="tab active" data-tab="config">Torneos</div>
     <div class="tab" data-tab="calendario">Calendario</div>
     <div class="tab" data-tab="ranking">Ranking</div>
     <div class="tab" data-tab="sync">Sincronizar</div>
   </div>
 
   <div id="tab-config">
-    <div class="card">
-      <h2>Número de inscritos</h2>
-      <select id="playerCount">
+    <div class="card" id="tournamentListCard">
+      <h2>Mis torneos (máx. 4)</h2>
+      <div id="tournamentList"></div>
+    </div>
+
+    <div class="card" id="createTournamentCard">
+      <h2>Crear nuevo torneo</h2>
+      <div class="note">Nombre del torneo</div>
+      <input type="text" id="newTournamentName" placeholder="Ej: Torneo Sábado">
+      <div class="note" style="margin-top:10px;">Modalidad</div>
+      <select id="newMode">
+        <option value="americano">Americano (4 games por partido)</option>
+        <option value="regular">Regular (2 sets + super tiebreak a 10)</option>
+      </select>
+      <div class="note" style="margin-top:10px;">Número de inscritos</div>
+      <select id="newPlayerCount">
         <option value="10">10 jugadores</option>
         <option value="11">11 jugadores</option>
         <option value="12">12 jugadores</option>
@@ -131,22 +168,25 @@
         <option value="19">19 jugadores</option>
         <option value="20">20 jugadores</option>
       </select>
-      <h2 style="margin-top:12px;">Número de canchas</h2>
-      <select id="courtCount">
+      <div class="note" style="margin-top:10px;">Número de canchas</div>
+      <select id="newCourtCount">
         <option value="2" selected>2 canchas</option>
         <option value="3">3 canchas</option>
         <option value="4">4 canchas</option>
       </select>
-      <div class="note" id="formatSummary" style="margin-top:8px;"></div>
+      <div class="note" id="newFormatSummary" style="margin-top:8px;"></div>
       <div class="actions">
-        <button id="btnGenerate">Generar torneo</button>
-        <button class="danger" id="btnReset" type="button">Reiniciar todo</button>
+        <button id="btnCreateTournament">Crear torneo</button>
       </div>
+      <div class="note" id="createStatus"></div>
     </div>
 
     <div class="card">
-      <h2>Jugadores</h2>
+      <h2>Jugadores del torneo activo</h2>
       <div class="players-grid" id="playersGrid"></div>
+      <div class="actions">
+        <button class="danger" id="btnResetScores" type="button">Borrar resultados de este torneo</button>
+      </div>
     </div>
   </div>
 
@@ -175,8 +215,8 @@
 
   <div id="tab-sync" class="hidden">
     <div class="card">
-      <h2>Enviar mis datos a otro celular</h2>
-      <div class="note">Genera un código con todo lo que tienes cargado (jugadores, calendario y resultados) y envíalo por WhatsApp, Bluetooth o el medio que prefieras. No necesita internet, solo compartir el texto.</div>
+      <h2>Enviar el torneo activo a otro celular</h2>
+      <div class="note">Genera un código con el torneo activo (jugadores, calendario y resultados) y envíalo por WhatsApp, Bluetooth o el medio que prefieras. No necesita internet, solo compartir el texto.</div>
       <div class="actions">
         <button id="btnExport" type="button">Generar código para compartir</button>
       </div>
@@ -188,11 +228,11 @@
     </div>
 
     <div class="card">
-      <h2>Recibir datos de otro celular</h2>
-      <div class="note">Pega aquí el código que te compartieron. Esto <b>reemplaza por completo</b> los datos de este celular (jugadores, calendario y resultados).</div>
+      <h2>Recibir un torneo de otro celular</h2>
+      <div class="note">Pega aquí el código que te compartieron. Se agrega como un torneo nuevo en tu lista (o reemplaza uno con el mismo nombre). Si ya tienes 4 torneos, deberás borrar uno primero.</div>
       <textarea id="importBox" class="sync-box" placeholder="Pega aquí el código recibido..."></textarea>
       <div class="actions">
-        <button id="btnImport" type="button">Actualizar mis datos con este código</button>
+        <button id="btnImport" type="button">Importar este torneo</button>
       </div>
       <div class="note" id="importStatus"></div>
     </div>
@@ -201,9 +241,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'padel-tournament-state-v1';
-let state = null;
-
+/* ============ Algoritmo de round-robin de parejas (sin cambios) ============ */
 function circleFactorization(N){
   const others = [];
   for(let i=1;i<N;i++) others.push(i);
@@ -270,70 +308,352 @@ function assignRounds(matches, courts){
   return rounds;
 }
 
-function buildSchedule(realN, courts){
-  const N = realN % 2 === 0 ? realN : realN + 1; // tamaño par usado internamente
-  const BYE = realN % 2 === 0 ? null : N;        // jugador "fantasma" para el descanso
+function buildSchedule(realN, courts, ensureOpponents){
+  const N = realN % 2 === 0 ? realN : realN + 1;
+  const BYE = realN % 2 === 0 ? null : N;
   const megarounds = circleFactorization(N);
   let queue = [];
   megarounds.forEach(r=>r.forEach(p=>{
-    if(BYE && (p[0]===BYE || p[1]===BYE)) return; // ese jugador descansa esa megarronda
+    if(BYE && (p[0]===BYE || p[1]===BYE)) return;
     queue.push(p);
   }));
-  const {matches, fillerCount} = buildMatches(queue);
-  const physRounds = assignRounds(matches, courts);
-  return {physRounds, totalMatches: matches.length, fillerCount};
+  let allMatches, fillerCount, extraOpponentCount = 0;
+  if(ensureOpponents){
+    // Modalidad americano: arma las parejas priorizando en cada partido rivalidades
+    // todavía no vistas, para minimizar los partidos extra necesarios al final.
+    const smart = buildMatchesSmart(queue);
+    fillerCount = smart.fillerCount;
+    const missing = computeMissingOpponentPairs(smart.coveredOpponents, realN);
+    const extra = buildOpponentFillerMatches(missing, realN);
+    extraOpponentCount = extra.length;
+    allMatches = smart.matches.concat(extra);
+  } else {
+    const basic = buildMatches(queue);
+    fillerCount = basic.fillerCount;
+    allMatches = basic.matches;
+  }
+  const physRounds = assignRounds(allMatches, courts);
+  return {physRounds, totalMatches: allMatches.length, fillerCount, extraOpponentCount};
 }
 
-function defaultState(N, courts){
-  const {physRounds, totalMatches, fillerCount} = buildSchedule(N, courts);
+// Variante de buildMatches que, en cada paso, elige entre las parejas restantes la que
+// cubra más rivalidades (pareja-vs-pareja) todavía no vistas, para minimizar partidos extra.
+function buildMatchesSmart(queue){
+  const coveredOpponents = new Set();
+  const matches = [];
+  let fillerCount = 0;
+  const q = queue.slice();
+  while(q.length>0){
+    const p1 = q.shift();
+    let bestIdx = -1, bestNew = -1;
+    for(let i=0;i<q.length;i++){
+      const p2 = q[i];
+      if(p2[0]===p1[0] || p2[0]===p1[1] || p2[1]===p1[0] || p2[1]===p1[1]) continue;
+      let newCount = 0;
+      p1.forEach(x=>p2.forEach(y=>{ if(!coveredOpponents.has(opponentKey(x,y))) newCount++; }));
+      if(newCount>bestNew){ bestNew=newCount; bestIdx=i; if(newCount===4) break; }
+    }
+    if(bestIdx===-1){
+      let fillerPartner = null;
+      outer:
+      for(const m of matches){
+        for(const p of [m.a, m.b]){
+          if(p[0]!==p1[0] && p[0]!==p1[1] && p[1]!==p1[0] && p[1]!==p1[1]){ fillerPartner = p; break outer; }
+        }
+      }
+      matches.push({a:p1, b:fillerPartner || p1, filler:true});
+      fillerCount++;
+      if(fillerPartner){ p1.forEach(x=>fillerPartner.forEach(y=>coveredOpponents.add(opponentKey(x,y)))); }
+    } else {
+      const p2 = q.splice(bestIdx,1)[0];
+      matches.push({a:p1, b:p2, filler:false});
+      p1.forEach(x=>p2.forEach(y=>coveredOpponents.add(opponentKey(x,y))));
+    }
+  }
+  return {matches, fillerCount, coveredOpponents};
+}
+
+function opponentKey(a,b){ return [Math.min(a,b),Math.max(a,b)].join('-'); }
+
+function computeMissingOpponentPairs(coveredOpponents, N){
+  const missing = [];
+  for(let i=1;i<=N;i++){
+    for(let j=i+1;j<=N;j++){
+      if(!coveredOpponents.has(opponentKey(i,j))) missing.push([i,j]);
+    }
+  }
+  return missing;
+}
+
+// Genera partidos adicionales para que todo par de jugadores se enfrente como rival al menos una vez
+function buildOpponentFillerMatches(missingPairs, N){
+  const missingSet = new Set(missingPairs.map(([a,b])=>opponentKey(a,b)));
+  const extraMatches = [];
+  while(missingSet.size>0){
+    const first = missingSet.values().next().value;
+    missingSet.delete(first);
+    const [x,y] = first.split('-').map(Number);
+    let chosen = null;
+    for(const k of missingSet){
+      const [p,q] = k.split('-').map(Number);
+      if(p!==x && p!==y && q!==x && q!==y){ chosen = [p,q]; missingSet.delete(k); break; }
+    }
+    let p,q;
+    if(chosen){ [p,q] = chosen; }
+    else {
+      const others = [];
+      for(let k=1;k<=N;k++){ if(k!==x && k!==y) others.push(k); }
+      p = others[0]; q = others[1];
+    }
+    extraMatches.push({a:[x,p], b:[y,q], filler:false, extraOpponent:true});
+    [opponentKey(x,q), opponentKey(p,y)].forEach(k=>missingSet.delete(k));
+  }
+  return extraMatches;
+}
+
+/* ============ Resultado de un partido según modalidad ============ */
+function emptyScore(mode){
+  return mode === 'regular'
+    ? {s1a:'', s1b:'', s2a:'', s2b:'', s3a:'', s3b:''}
+    : {ga:'', gb:''};
+}
+
+// Devuelve: complete, error, needsTiebreak, gamesA, gamesB, winner ('A'|'B'|null)
+function computeMatchResult(mode, sc){
+  if(mode === 'americano'){
+    if(sc.ga==='' || sc.gb==='') return {complete:false, error:false, needsTiebreak:false};
+    const a = Number(sc.ga), b = Number(sc.gb);
+    if(a+b!==4) return {complete:false, error:true, needsTiebreak:false};
+    return {complete:true, error:false, needsTiebreak:false, gamesA:a, gamesB:b, winner: a>b?'A':(b>a?'B':null)};
+  }
+  // regular
+  if(sc.s1a==='' || sc.s1b==='' || sc.s2a==='' || sc.s2b==='') return {complete:false, error:false, needsTiebreak:false};
+  const n1a=Number(sc.s1a), n1b=Number(sc.s1b), n2a=Number(sc.s2a), n2b=Number(sc.s2b);
+  if(n1a===n1b || n2a===n2b) return {complete:false, error:true, needsTiebreak:false};
+  const w1 = n1a>n1b ? 'A':'B';
+  const w2 = n2a>n2b ? 'A':'B';
+  let gamesA = n1a+n2a, gamesB = n1b+n2b;
+  if(w1===w2){
+    return {complete:true, error:false, needsTiebreak:false, gamesA, gamesB, winner:w1};
+  }
+  // 1-1, se necesita super tiebreak
+  if(sc.s3a==='' || sc.s3b===''){
+    return {complete:false, error:false, needsTiebreak:true, gamesA, gamesB};
+  }
+  const n3a = Number(sc.s3a), n3b = Number(sc.s3b);
+  if(n3a===n3b || Math.max(n3a,n3b) < 10){
+    return {complete:false, error:true, needsTiebreak:true, gamesA, gamesB};
+  }
+  const w3 = n3a>n3b ? 'A':'B';
+  if(w3==='A') gamesA += 1; else gamesB += 1;
+  return {complete:true, error:false, needsTiebreak:true, gamesA, gamesB, winner:w3};
+}
+
+/* ============ Almacenamiento multi-torneo (máx 4) ============ */
+const STORAGE_KEY = 'padel-app-state-v2';
+const OLD_STORAGE_KEY = 'padel-tournament-state-v1';
+const MAX_TOURNAMENTS = 4;
+let app = null; // {tournaments:{id:{...}}, order:[ids], activeId}
+
+function activeTournament(){
+  if(!app || !app.activeId) return null;
+  return app.tournaments[app.activeId];
+}
+
+function makeTournament(name, mode, N, courts){
+  const ensureOpponents = (mode === 'americano');
+  const {physRounds, totalMatches, fillerCount, extraOpponentCount} = buildSchedule(N, courts, ensureOpponents);
   const players = {};
   for(let i=1;i<=N;i++) players[i] = 'Jugador ' + i;
   const scores = {};
   physRounds.forEach((round, ri)=>{
     round.forEach((m, ci)=>{
-      scores[ri+'-'+ci] = {ga:'', gb:''};
+      scores[ri+'-'+ci] = emptyScore(mode);
     });
   });
-  return {N, courts, players, physRounds, totalMatches, fillerCount, scores};
+  return {
+    id: 't' + Date.now() + Math.floor(Math.random()*1000),
+    name: name || 'Torneo',
+    mode, N, courts, players, physRounds, totalMatches, fillerCount, extraOpponentCount, scores
+  };
 }
 
-async function loadState(){
+function loadApp(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.tournaments) return parsed;
+    }
   }catch(e){}
-  return null;
+  // migración desde la versión anterior (un solo torneo, siempre modalidad americano)
+  try{
+    const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+    if(oldRaw){
+      const old = JSON.parse(oldRaw);
+      if(old && old.N && old.physRounds){
+        const t = {
+          id: 't' + Date.now(),
+          name: 'Torneo 1',
+          mode: 'americano',
+          N: old.N, courts: old.courts || 2,
+          players: old.players, physRounds: old.physRounds,
+          totalMatches: old.totalMatches, fillerCount: old.fillerCount, extraOpponentCount: 0,
+          scores: old.scores
+        };
+        return {tournaments:{[t.id]:t}, order:[t.id], activeId:t.id};
+      }
+    }
+  }catch(e){}
+  return {tournaments:{}, order:[], activeId:null};
 }
-async function saveState(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+function saveApp(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(app)); }catch(e){}
 }
 
-function playerName(num){ return state.players[num] || ('Jugador '+num); }
+function createTournament(name, mode, N, courts){
+  if(app.order.length >= MAX_TOURNAMENTS){
+    return {ok:false, msg:'Ya tienes ' + MAX_TOURNAMENTS + ' torneos guardados. Borra uno antes de crear otro.'};
+  }
+  const t = makeTournament(name, mode, N, courts);
+  app.tournaments[t.id] = t;
+  app.order.push(t.id);
+  app.activeId = t.id;
+  saveApp();
+  return {ok:true, id:t.id};
+}
+function deleteTournament(id){
+  delete app.tournaments[id];
+  app.order = app.order.filter(x=>x!==id);
+  if(app.activeId === id) app.activeId = app.order[0] || null;
+  saveApp();
+}
+function renameTournament(id, newName){
+  if(app.tournaments[id]){ app.tournaments[id].name = newName; saveApp(); }
+}
+function switchTournament(id){
+  if(app.tournaments[id]){ app.activeId = id; saveApp(); renderAll(); }
+}
 
-function renderFormatSummary(N, courts){
+/* ============ Utilidades de presentación ============ */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function playerName(t, num){ return t.players[num] || ('Jugador '+num); }
+
+function computeRanking(t){
+  const gf={}, gc={}, pj={};
+  for(let i=1;i<=t.N;i++){ gf[i]=0; gc[i]=0; pj[i]=0; }
+  t.physRounds.forEach((round, ri)=>{
+    round.forEach((m, ci)=>{
+      const sc = t.scores[ri+'-'+ci];
+      const res = computeMatchResult(t.mode, sc);
+      if(!res.complete) return;
+      m.a.forEach(p=>{ gf[p]+=res.gamesA; gc[p]+=res.gamesB; pj[p]+=1; });
+      m.b.forEach(p=>{ gf[p]+=res.gamesB; gc[p]+=res.gamesA; pj[p]+=1; });
+    });
+  });
+  const rows = [];
+  for(let i=1;i<=t.N;i++){
+    const ratio = gc[i]>0 ? gf[i]/gc[i] : (gf[i]>0 ? gf[i] : 0);
+    rows.push({num:i, name:playerName(t,i), pj:pj[i], gf:gf[i], gc:gc[i], diff:gf[i]-gc[i], ratio});
+  }
+  rows.sort((a,b)=> b.ratio-a.ratio || b.diff-a.diff);
+  return rows;
+}
+
+/* ============ Render: selector de torneo y lista ============ */
+function renderTournamentSelector(){
+  const sel = document.getElementById('tournamentSelector');
+  sel.innerHTML = '';
+  if(app.order.length===0){
+    const opt = document.createElement('option');
+    opt.textContent = 'No hay torneos creados';
+    sel.appendChild(opt);
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  app.order.forEach(id=>{
+    const t = app.tournaments[id];
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = t.name + ' (' + (t.mode==='regular'?'Regular':'Americano') + ')';
+    if(id === app.activeId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function renderTournamentList(){
+  const box = document.getElementById('tournamentList');
+  box.innerHTML = '';
+  if(app.order.length===0){
+    box.innerHTML = '<div class="note">Todavía no has creado ningún torneo.</div>';
+    return;
+  }
+  app.order.forEach(id=>{
+    const t = app.tournaments[id];
+    const div = document.createElement('div');
+    div.className = 'tlist-item' + (id===app.activeId ? ' active' : '');
+    div.innerHTML =
+      '<div class="tname">' + escapeHtml(t.name) +
+      '<span class="badge ' + t.mode + '">' + (t.mode==='regular'?'Regular':'Americano') + '</span></div>' +
+      '<div class="tmeta">' + t.N + ' jugadores &middot; ' + t.courts + ' cancha(s) &middot; ' + t.physRounds.length + ' rondas</div>' +
+      '<div class="tactions">' +
+        (id!==app.activeId ? '<button class="secondary tsel-btn" data-id="'+id+'">Seleccionar</button>' : '') +
+        '<button class="secondary trename-btn" data-id="'+id+'">Renombrar</button>' +
+        '<button class="danger tdel-btn" data-id="'+id+'">Eliminar</button>' +
+      '</div>';
+    box.appendChild(div);
+  });
+  box.querySelectorAll('.tsel-btn').forEach(b=>b.addEventListener('click', ()=>switchTournament(b.dataset.id)));
+  box.querySelectorAll('.trename-btn').forEach(b=>b.addEventListener('click', ()=>{
+    const t = app.tournaments[b.dataset.id];
+    const name = prompt('Nuevo nombre del torneo:', t.name);
+    if(name && name.trim()){ renameTournament(b.dataset.id, name.trim()); renderAll(); }
+  }));
+  box.querySelectorAll('.tdel-btn').forEach(b=>b.addEventListener('click', ()=>{
+    const t = app.tournaments[b.dataset.id];
+    if(confirm('¿Eliminar el torneo "' + t.name + '" y todos sus resultados? Esta acción no se puede deshacer.')){
+      deleteTournament(b.dataset.id);
+      renderAll();
+    }
+  }));
+}
+
+function renderNewFormatSummary(){
+  const N = Number(document.getElementById('newPlayerCount').value);
+  const courts = Number(document.getElementById('newCourtCount').value);
+  const mode = document.getElementById('newMode').value;
+  const ensureOpponents = (mode === 'americano');
   const minutesPerRound = 25;
-  const {totalMatches, fillerCount, physRounds} = buildSchedule(N, courts);
+  const {totalMatches, fillerCount, extraOpponentCount, physRounds} = buildSchedule(N, courts, ensureOpponents);
   const rounds = physRounds.length;
   const totalMin = rounds*minutesPerRound;
   const h = Math.floor(totalMin/60), m = totalMin%60;
-  document.getElementById('formatSummary').innerHTML =
+  document.getElementById('newFormatSummary').innerHTML =
     N + ' jugadores, ' + courts + ' cancha(s) &rarr; ' + totalMatches + ' partidos &middot; ' + rounds + ' rondas &middot; ' +
     '&asymp; ' + h + 'h' + (m? ' '+m+'min':'') + ' de juego' +
-    (fillerCount>0 ? '<br>Incluye ' + fillerCount + ' partido(s) de relleno (repetición) por número impar de parejas.' : '');
+    (fillerCount>0 ? '<br>Incluye ' + fillerCount + ' partido(s) de relleno (repetición) por número impar de parejas.' : '') +
+    (extraOpponentCount>0 ? '<br>Incluye ' + extraOpponentCount + ' partido(s) extra para que todos se enfrenten como rivales al menos una vez.' : '');
 }
 
+/* ============ Render: jugadores, métricas, calendario, ranking ============ */
 function renderPlayersGrid(){
   const grid = document.getElementById('playersGrid');
   grid.innerHTML = '';
-  for(let i=1;i<=state.N;i++){
+  const t = activeTournament();
+  if(!t) return;
+  for(let i=1;i<=t.N;i++){
     const wrap = document.createElement('div');
     const label = document.createElement('span');
     label.className='pn'; label.textContent = 'Jugador '+i;
     const input = document.createElement('input');
-    input.type='text'; input.value = state.players[i]; input.dataset.num = i;
+    input.type='text'; input.value = t.players[i]; input.dataset.num = i;
+    input.disabled = false;
     input.addEventListener('input', (e)=>{
-      state.players[e.target.dataset.num] = e.target.value || ('Jugador '+e.target.dataset.num);
-      renderCalendario(); renderRanking(); saveState();
+      t.players[e.target.dataset.num] = e.target.value || ('Jugador '+e.target.dataset.num);
+      renderCalendario(); renderRanking(); renderTournamentSelector(); saveApp();
     });
     wrap.appendChild(label); wrap.appendChild(input);
     grid.appendChild(wrap);
@@ -342,36 +662,79 @@ function renderPlayersGrid(){
 
 function renderMetrics(){
   const box = document.getElementById('metricsBox');
-  const rounds = state.physRounds.length;
+  const t = activeTournament();
+  if(!t){ box.innerHTML=''; return; }
+  const rounds = t.physRounds.length;
   const minutesPerRound = 25;
   const totalMin = rounds*minutesPerRound;
   const h = Math.floor(totalMin/60), m = totalMin%60;
   box.innerHTML =
-    '<div class="metric"><div class="lbl">Partidos totales</div><div class="val">'+state.totalMatches+'</div></div>' +
-    '<div class="metric"><div class="lbl">Rondas ('+state.courts+' cancha'+(state.courts>1?'s':'')+')</div><div class="val">'+rounds+'</div></div>' +
+    '<div class="metric"><div class="lbl">Partidos totales</div><div class="val">'+t.totalMatches+'</div></div>' +
+    '<div class="metric"><div class="lbl">Rondas ('+t.courts+' cancha'+(t.courts>1?'s':'')+')</div><div class="val">'+rounds+'</div></div>' +
     '<div class="metric"><div class="lbl">Duración de juego</div><div class="val">'+h+'h'+(m?(' '+m+'m'):'')+'</div></div>' +
-    '<div class="metric"><div class="lbl">Jugadores</div><div class="val">'+state.N+'</div></div>';
+    '<div class="metric"><div class="lbl">Modalidad</div><div class="val" style="font-size:13px;">'+(t.mode==='regular'?'Regular':'Americano')+'</div></div>';
 
   const banner = document.getElementById('fillerBanner');
-  if(state.fillerCount>0){
+  const notes = [];
+  if(t.fillerCount>0){
+    notes.push('Incluye ' + t.fillerCount + ' partido(s) marcados como "Relleno": con ' + t.N + ' jugadores el número de parejas necesarias es impar, así que una pareja repite partido para completar cancha.');
+  }
+  if(t.extraOpponentCount>0){
+    notes.push('Incluye ' + t.extraOpponentCount + ' partido(s) marcados como "Extra rival": agregados para garantizar que todos se enfrenten como rivales al menos una vez.');
+  }
+  if(notes.length>0){
     banner.classList.remove('hidden');
-    banner.textContent = 'Este calendario incluye ' + state.fillerCount + ' partido(s) marcados como "relleno": con ' + state.N + ' jugadores el número de parejas necesarias es impar, así que una pareja repite partido para completar cancha.';
+    banner.innerHTML = notes.join('<br>');
   } else {
     banner.classList.add('hidden');
   }
 }
 
-function scoreStatus(sc){
-  if(sc.ga==='' || sc.gb==='') return {cls:'pending', text:'Pendiente'};
-  const a = Number(sc.ga), b = Number(sc.gb);
-  if(a+b!==4) return {cls:'err', text:'Debe sumar 4 games'};
-  return {cls:'ok', text:'Registrado'};
+function matchStatusLabel(res){
+  if(res.complete) return {cls:'ok', text:'Registrado'};
+  if(res.error) return {cls:'err', text: res.needsTiebreak ? 'Super tiebreak inválido (min. 10, sin empate)' : 'Marcador inválido'};
+  if(res.needsTiebreak) return {cls:'pending', text:'Falta super tiebreak (1 set cada uno)'};
+  return {cls:'pending', text:'Pendiente'};
+}
+
+function scoreInputsHtml(mode, ri, ci, sc, readOnly){
+  const dis = readOnly ? 'disabled' : '';
+  if(mode === 'americano'){
+    return (
+      '<div class="pair-line"><span class="pair-names">__A__</span>' +
+      '<input type="number" min="0" max="4" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="ga" value="'+sc.ga+'"></div>' +
+      '<div class="vs">vs</div>' +
+      '<div class="pair-line"><span class="pair-names">__B__</span>' +
+      '<input type="number" min="0" max="4" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="gb" value="'+sc.gb+'"></div>'
+    );
+  }
+  const res = computeMatchResult(mode, sc);
+  const showTB = res.needsTiebreak;
+  return (
+    '<div class="set-row"><span>Set 1</span>' +
+    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s1a" value="'+sc.s1a+'">' +
+    '<span>-</span>' +
+    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s1b" value="'+sc.s1b+'"></div>' +
+    '<div class="set-row"><span>Set 2</span>' +
+    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s2a" value="'+sc.s2a+'">' +
+    '<span>-</span>' +
+    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s2b" value="'+sc.s2b+'"></div>' +
+    (showTB ?
+      '<div class="set-row tb"><span>Super TB</span>' +
+      '<input type="number" min="0" max="30" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s3a" value="'+sc.s3a+'">' +
+      '<span>-</span>' +
+      '<input type="number" min="0" max="30" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s3b" value="'+sc.s3b+'"></div>'
+      : '')
+  );
 }
 
 function renderCalendario(){
   const list = document.getElementById('roundsList');
+  const t = activeTournament();
   list.innerHTML = '';
-  state.physRounds.forEach((round, ri)=>{
+  if(!t) return;
+  const readOnly = false;
+  t.physRounds.forEach((round, ri)=>{
     const div = document.createElement('div');
     div.className='round';
     const head = document.createElement('div');
@@ -379,7 +742,7 @@ function renderCalendario(){
     const activePlayers = new Set();
     round.forEach(m=>{ [...m.a, ...m.b].forEach(p=>activePlayers.add(p)); });
     const resting = [];
-    for(let i=1;i<=state.N;i++){ if(!activePlayers.has(i)) resting.push(playerName(i)); }
+    for(let i=1;i<=t.N;i++){ if(!activePlayers.has(i)) resting.push(playerName(t,i)); }
     head.innerHTML = '<span class="rn">Ronda '+(ri+1)+'</span><span class="rt">'+round.length+' cancha(s) en juego</span>';
     div.appendChild(head);
     if(resting.length>0){
@@ -392,73 +755,58 @@ function renderCalendario(){
 
     round.forEach((m, ci)=>{
       const key = ri+'-'+ci;
-      const sc = state.scores[key];
-      const st = scoreStatus(sc);
+      const sc = t.scores[key];
+      const res = computeMatchResult(t.mode, sc);
+      const st = matchStatusLabel(res);
       const mdiv = document.createElement('div');
       mdiv.className='match';
+      const nameA = escapeHtml(playerName(t,m.a[0])) + ' / ' + escapeHtml(playerName(t,m.a[1]));
+      const nameB = escapeHtml(playerName(t,m.b[0])) + ' / ' + escapeHtml(playerName(t,m.b[1]));
+      let inputsHtml = scoreInputsHtml(t.mode, ri, ci, sc, readOnly);
+      inputsHtml = inputsHtml.replace('__A__', nameA).replace('__B__', nameB);
       mdiv.innerHTML =
-        '<span class="court">Cancha '+(ci+1)+'</span>' + (m.filler? '<span class="filler">Relleno</span>':'') +
-        '<div class="pair-line"><span class="pair-names">'+playerName(m.a[0])+' / '+playerName(m.a[1])+'</span>' +
-        '<input type="number" min="0" max="4" class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="ga" value="'+sc.ga+'"></div>' +
-        '<div class="vs">vs</div>' +
-        '<div class="pair-line"><span class="pair-names">'+playerName(m.b[0])+' / '+playerName(m.b[1])+'</span>' +
-        '<input type="number" min="0" max="4" class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="gb" value="'+sc.gb+'"></div>' +
+        '<span class="court">Cancha '+(ci+1)+'</span>' +
+        (m.filler? '<span class="filler">Relleno</span>':'') +
+        (m.extraOpponent? '<span class="filler" style="background:#E4EEFB;color:#1F5FA8;">Extra rival</span>':'') +
+        (t.mode==='regular' ? ('<div class="pair-line"><b>'+nameA+'</b></div><div class="vs">vs</div><div class="pair-line"><b>'+nameB+'</b></div>') : '') +
+        inputsHtml +
         '<div class="status '+st.cls+'">'+st.text+'</div>';
       div.appendChild(mdiv);
     });
     list.appendChild(div);
   });
 
-  list.querySelectorAll('.score-input').forEach(inp=>{
-    inp.addEventListener('input', (e)=>{
-      const ri = e.target.dataset.round, ci = e.target.dataset.court, side = e.target.dataset.side;
-      const key = ri+'-'+ci;
-      let v = e.target.value;
-      if(v!=='' ){ v = Math.max(0, Math.min(4, Math.round(Number(v)))); }
-      state.scores[key][side] = v;
-      renderCalendarioStatusOnly();
-      renderRanking();
-      saveState();
+  if(!readOnly){
+    list.querySelectorAll('.score-input').forEach(inp=>{
+      inp.addEventListener('input', (e)=>{
+        const ri = e.target.dataset.round, ci = e.target.dataset.court, side = e.target.dataset.side;
+        const key = ri+'-'+ci;
+        let v = e.target.value;
+        if(v!==''){
+          const max = Number(e.target.max);
+          v = Math.max(0, Math.min(max, Math.round(Number(v))));
+        }
+        t.scores[key][side] = v;
+        renderCalendario();
+        renderRanking();
+        saveApp();
+      });
     });
-  });
-}
-
-function renderCalendarioStatusOnly(){
-  document.querySelectorAll('.match').forEach((mdiv, flatIdx)=>{});
-  renderCalendario();
-}
-
-function computeRanking(){
-  const gf = {}, gc = {}, pj = {};
-  for(let i=1;i<=state.N;i++){ gf[i]=0; gc[i]=0; pj[i]=0; }
-  state.physRounds.forEach((round, ri)=>{
-    round.forEach((m, ci)=>{
-      const sc = state.scores[ri+'-'+ci];
-      if(sc.ga==='' || sc.gb==='') return;
-      const a = Number(sc.ga), b = Number(sc.gb);
-      m.a.forEach(p=>{ gf[p]+=a; gc[p]+=b; pj[p]+=1; });
-      m.b.forEach(p=>{ gf[p]+=b; gc[p]+=a; pj[p]+=1; });
-    });
-  });
-  const rows = [];
-  for(let i=1;i<=state.N;i++){
-    const ratio = gc[i]>0 ? gf[i]/gc[i] : (gf[i]>0 ? gf[i] : 0);
-    rows.push({num:i, name:playerName(i), pj:pj[i], gf:gf[i], gc:gc[i], diff:gf[i]-gc[i], ratio});
   }
-  rows.sort((a,b)=> b.ratio-a.ratio || b.diff-a.diff);
-  return rows;
 }
 
 function renderRanking(){
-  const rows = computeRanking();
+  const t = activeTournament();
   const body = document.getElementById('rankBody');
   body.innerHTML = '';
+  if(!t) return;
+  const rows = computeRanking(t);
   rows.forEach((r, idx)=>{
     const tr = document.createElement('tr');
     const posClass = idx===0?'pos p1':(idx===1?'pos p2':(idx===2?'pos p3':'pos'));
     tr.innerHTML =
       '<td><span class="'+posClass+'">'+(idx+1)+'</span></td>' +
-      '<td>'+r.name+'</td>' +
+      '<td>'+escapeHtml(r.name)+'</td>' +
       '<td class="num">'+r.pj+'</td>' +
       '<td class="num">'+r.gf+'</td>' +
       '<td class="num">'+r.gc+'</td>' +
@@ -469,17 +817,19 @@ function renderRanking(){
 }
 
 function renderAll(){
-  document.getElementById('playerCount').value = state.N;
-  document.getElementById('courtCount').value = state.courts;
-  renderFormatSummary(state.N, state.courts);
+  renderTournamentSelector();
+  renderTournamentList();
+  renderNewFormatSummary();
   renderPlayersGrid();
   renderMetrics();
   renderCalendario();
   renderRanking();
 }
 
+/* ============ Eventos: tabs, selector de torneo ============ */
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click', ()=>{
+    if(t.classList.contains('hidden')) return;
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     ['config','calendario','ranking','sync'].forEach(id=>{
@@ -488,80 +838,61 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
-function readConfigInputs(){
-  return {
-    N: Number(document.getElementById('playerCount').value),
-    courts: Number(document.getElementById('courtCount').value)
-  };
-}
-
-document.getElementById('playerCount').addEventListener('change', ()=>{
-  const {N, courts} = readConfigInputs();
-  renderFormatSummary(N, courts);
-});
-document.getElementById('courtCount').addEventListener('change', ()=>{
-  const {N, courts} = readConfigInputs();
-  renderFormatSummary(N, courts);
+document.getElementById('tournamentSelector').addEventListener('change', (e)=>{
+  switchTournament(e.target.value);
 });
 
-document.getElementById('btnGenerate').addEventListener('click', ()=>{
-  const {N, courts} = readConfigInputs();
-  if(state && state.N===N && state.courts===courts){
-    const hasScores = Object.values(state.scores).some(s=>s.ga!=='' || s.gb!=='');
-    if(hasScores && !confirm('Ya hay resultados cargados. ¿Generar de nuevo borrará el calendario y los scores actuales?')) return;
-  } else if(state){
-    if(!confirm('Cambiar la configuración (jugadores/canchas) reiniciará el calendario y los resultados. ¿Continuar?')) return;
+document.getElementById('newPlayerCount').addEventListener('change', renderNewFormatSummary);
+document.getElementById('newCourtCount').addEventListener('change', renderNewFormatSummary);
+document.getElementById('newMode').addEventListener('change', renderNewFormatSummary);
+
+document.getElementById('btnCreateTournament').addEventListener('click', ()=>{
+  const name = document.getElementById('newTournamentName').value.trim() || ('Torneo ' + (app.order.length+1));
+  const mode = document.getElementById('newMode').value;
+  const N = Number(document.getElementById('newPlayerCount').value);
+  const courts = Number(document.getElementById('newCourtCount').value);
+  const result = createTournament(name, mode, N, courts);
+  const statusEl = document.getElementById('createStatus');
+  if(!result.ok){
+    statusEl.textContent = result.msg;
+    return;
   }
-  const prevNames = state ? {...state.players} : null;
-  state = defaultState(N, courts);
-  if(prevNames){
-    for(let i=1;i<=N;i++){ if(prevNames[i]) state.players[i] = prevNames[i]; }
-  }
-  saveState();
+  statusEl.textContent = '';
+  document.getElementById('newTournamentName').value = '';
   renderAll();
   document.querySelector('.tab[data-tab="calendario"]').click();
 });
 
-document.getElementById('btnReset').addEventListener('click', ()=>{
-  if(!confirm('Esto borra nombres, calendario y resultados. ¿Continuar?')) return;
-  const {N, courts} = readConfigInputs();
-  state = defaultState(N || 16, courts || 2);
-  saveState();
+document.getElementById('btnResetScores').addEventListener('click', ()=>{
+  const t = activeTournament();
+  if(!t) return;
+  if(!confirm('Esto borra todos los resultados cargados de "' + t.name + '" (mantiene jugadores y calendario). ¿Continuar?')) return;
+  Object.keys(t.scores).forEach(key=>{ t.scores[key] = emptyScore(t.mode); });
+  saveApp();
   renderAll();
 });
 
-(async function init(){
-  const loaded = await loadState();
-  state = loaded || defaultState(16, 2);
-  if(state && state.courts === undefined) state.courts = 2; // compatibilidad con datos guardados antes de esta actualización
-  renderAll();
-})();
-
-if('serviceWorker' in navigator && (location.protocol==='https:' || location.protocol==='http:')){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  });
-}
-
-// ---------- Sincronizar entre celulares (codigo manual, sin servidor) ----------
+/* ============ Sincronizar (código manual, sin servidor) ============ */
 function encodeState(obj){
   return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
 }
 function decodeState(code){
   return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
 }
-function isValidTournamentState(obj){
+function isValidTournament(obj){
   return obj && typeof obj.N === 'number' && typeof obj.courts === 'number' &&
-         obj.players && obj.physRounds && obj.scores;
+         obj.players && obj.physRounds && obj.scores && (obj.mode==='americano' || obj.mode==='regular');
 }
 
 document.getElementById('btnExport').addEventListener('click', ()=>{
-  const code = encodeState(state);
+  const t = activeTournament();
+  if(!t){ document.getElementById('exportStatus').textContent = 'No hay torneo activo para exportar.'; return; }
+  const code = encodeState(t);
   const box = document.getElementById('exportBox');
   box.value = code;
   box.classList.remove('hidden');
   document.getElementById('exportActions').classList.remove('hidden');
-  document.getElementById('exportStatus').textContent = 'Código generado (' + code.length + ' caracteres). Cópialo y compártelo.';
+  document.getElementById('exportStatus').textContent = 'Código generado (' + code.length + ' caracteres) para "' + t.name + '". Cópialo y compártelo.';
 });
 
 document.getElementById('btnCopyExport').addEventListener('click', async ()=>{
@@ -585,29 +916,34 @@ document.getElementById('btnImport').addEventListener('click', ()=>{
   const statusEl = document.getElementById('importStatus');
   if(!raw.trim()){ statusEl.textContent = 'Pega primero el código recibido.'; return; }
   let parsed;
-  try{
-    parsed = decodeState(raw);
-  }catch(e){
-    statusEl.textContent = 'El código no es válido o está incompleto. Revisa que lo hayas copiado completo.';
-    return;
+  try{ parsed = decodeState(raw); }
+  catch(e){ statusEl.textContent = 'El código no es válido o está incompleto.'; return; }
+  if(!isValidTournament(parsed)){ statusEl.textContent = 'El código no corresponde a un torneo válido.'; return; }
+
+  const existingIdx = app.order.findIndex(id => app.tournaments[id].name === parsed.name);
+  if(existingIdx>=0){
+    if(!confirm('Ya tienes un torneo llamado "' + parsed.name + '". ¿Reemplazarlo con los datos recibidos?')) return;
+    const oldId = app.order[existingIdx];
+    parsed.id = oldId;
+    app.tournaments[oldId] = parsed;
+    app.activeId = oldId;
+  } else {
+    if(app.order.length >= MAX_TOURNAMENTS){
+      statusEl.textContent = 'Ya tienes ' + MAX_TOURNAMENTS + ' torneos guardados. Borra uno antes de importar.';
+      return;
+    }
+    if(!parsed.id || app.tournaments[parsed.id]) parsed.id = 't' + Date.now() + Math.floor(Math.random()*1000);
+    app.tournaments[parsed.id] = parsed;
+    app.order.push(parsed.id);
+    app.activeId = parsed.id;
   }
-  if(!isValidTournamentState(parsed)){
-    statusEl.textContent = 'El código no corresponde a datos de este torneo.';
-    return;
-  }
-  if(!confirm('Esto reemplazará TODOS tus datos actuales (jugadores, calendario y resultados) por los del código recibido. ¿Continuar?')) return;
-  state = parsed;
-  saveState();
+  saveApp();
   renderAll();
-  statusEl.textContent = 'Datos actualizados correctamente.';
+  statusEl.textContent = 'Torneo importado correctamente.';
   document.getElementById('importBox').value = '';
 });
 
-// ---------- Generar PDF (via dialogo de impresion nativo, sin librerias, offline) ----------
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
+/* ============ Generar PDF (diálogo de impresión nativo, sin librerías, offline) ============ */
 const PRINT_STYLES = `
   body{font-family:Arial,Helvetica,sans-serif;color:#20232A;padding:22px;}
   h1{font-size:19px;color:#1F2937;margin:0 0 4px;}
@@ -641,42 +977,62 @@ function openPrintWindow(title, bodyHtml){
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 250);
 }
 
+function scoreTextForPdf(mode, sc, res){
+  if(mode === 'americano'){
+    return res.complete ? (sc.ga + ' - ' + sc.gb) : '___ - ___';
+  }
+  const s1 = (sc.s1a!=='' && sc.s1b!=='') ? (sc.s1a+'-'+sc.s1b) : '__-__';
+  const s2 = (sc.s2a!=='' && sc.s2b!=='') ? (sc.s2a+'-'+sc.s2b) : '__-__';
+  let out = s1 + ' / ' + s2;
+  if(res.needsTiebreak){
+    const s3 = (sc.s3a!=='' && sc.s3b!=='') ? (sc.s3a+'-'+sc.s3b) : '__-__';
+    out += ' / TB ' + s3;
+  }
+  return out;
+}
+
 document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
+  const t = activeTournament();
+  if(!t) return;
   let roundsHtml = '';
-  state.physRounds.forEach((round, ri)=>{
+  t.physRounds.forEach((round, ri)=>{
     const activePlayers = new Set();
     round.forEach(m=>{ [...m.a, ...m.b].forEach(p=>activePlayers.add(p)); });
     const resting = [];
-    for(let i=1;i<=state.N;i++){ if(!activePlayers.has(i)) resting.push(escapeHtml(playerName(i))); }
+    for(let i=1;i<=t.N;i++){ if(!activePlayers.has(i)) resting.push(escapeHtml(playerName(t,i))); }
     roundsHtml += '<div class="pr-round"><h3>Ronda ' + (ri+1) + '</h3>';
     if(resting.length>0){
       roundsHtml += '<div class="pr-resting">Descansan: ' + resting.join(', ') + '</div>';
     }
     round.forEach((m, ci)=>{
-      const sc = state.scores[ri+'-'+ci];
-      const scoreText = (sc.ga!=='' && sc.gb!=='') ? (sc.ga + ' - ' + sc.gb) : '___ - ___';
+      const sc = t.scores[ri+'-'+ci];
+      const res = computeMatchResult(t.mode, sc);
+      const scoreText = scoreTextForPdf(t.mode, sc, res);
       roundsHtml +=
         '<div class="pr-match"><span class="pr-court">Cancha ' + (ci+1) + '</span>' +
         (m.filler ? '<span class="pr-filler">(Relleno)</span>' : '') +
+        (m.extraOpponent ? '<span class="pr-filler" style="color:#1F5FA8;">(Extra rival)</span>' : '') +
         '<span class="pr-score">' + scoreText + '</span><br>' +
-        '<b>' + escapeHtml(playerName(m.a[0])) + ' / ' + escapeHtml(playerName(m.a[1])) + '</b> vs ' +
-        '<b>' + escapeHtml(playerName(m.b[0])) + ' / ' + escapeHtml(playerName(m.b[1])) + '</b></div>';
+        '<b>' + escapeHtml(playerName(t,m.a[0])) + ' / ' + escapeHtml(playerName(t,m.a[1])) + '</b> vs ' +
+        '<b>' + escapeHtml(playerName(t,m.b[0])) + ' / ' + escapeHtml(playerName(t,m.b[1])) + '</b></div>';
     });
     roundsHtml += '</div>';
   });
 
   const body =
-    '<h1>Calendario de Partidos</h1>' +
-    '<div class="pr-meta">' + state.N + ' jugadores &middot; ' + state.courts + ' cancha(s) &middot; ' +
-    state.totalMatches + ' partidos &middot; ' + state.physRounds.length + ' rondas' +
-    (state.fillerCount>0 ? ' &middot; ' + state.fillerCount + ' partido(s) de relleno' : '') +
+    '<h1>Calendario de Partidos — ' + escapeHtml(t.name) + '</h1>' +
+    '<div class="pr-meta">' + (t.mode==='regular'?'Regular':'Americano') + ' &middot; ' + t.N + ' jugadores &middot; ' + t.courts + ' cancha(s) &middot; ' +
+    t.totalMatches + ' partidos &middot; ' + t.physRounds.length + ' rondas' +
+    (t.fillerCount>0 ? ' &middot; ' + t.fillerCount + ' partido(s) de relleno' : '') +
     '</div>' + roundsHtml;
 
   openPrintWindow('Calendario de Partidos', body);
 });
 
 document.getElementById('btnPdfRanking').addEventListener('click', ()=>{
-  const rows = computeRanking();
+  const t = activeTournament();
+  if(!t) return;
+  const rows = computeRanking(t);
   const trs = rows.map((r, idx)=>
     '<tr><td>' + (idx+1) + '</td><td>' + escapeHtml(r.name) + '</td>' +
     '<td class="num">' + r.pj + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.gc + '</td>' +
@@ -684,8 +1040,8 @@ document.getElementById('btnPdfRanking').addEventListener('click', ()=>{
   ).join('');
 
   const body =
-    '<h1>Ranking Individual</h1>' +
-    '<div class="pr-meta">' + state.N + ' jugadores &middot; generado el ' + new Date().toLocaleString() + '</div>' +
+    '<h1>Ranking Individual — ' + escapeHtml(t.name) + '</h1>' +
+    '<div class="pr-meta">' + (t.mode==='regular'?'Regular':'Americano') + ' &middot; ' + t.N + ' jugadores &middot; generado el ' + new Date().toLocaleString() + '</div>' +
     '<table><thead><tr><th>#</th><th>Jugador</th><th class="num">PJ</th><th class="num">GF</th>' +
     '<th class="num">GC</th><th class="num">Dif</th><th class="num">GF/GC</th></tr></thead>' +
     '<tbody>' + trs + '</tbody></table>' +
@@ -693,6 +1049,18 @@ document.getElementById('btnPdfRanking').addEventListener('click', ()=>{
 
   openPrintWindow('Ranking Individual', body);
 });
+
+/* ============ Inicio ============ */
+(function init(){
+  app = loadApp();
+  renderAll();
+})();
+
+if('serviceWorker' in navigator && (location.protocol==='https:' || location.protocol==='http:')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
