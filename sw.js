@@ -1,7 +1,5 @@
-const CACHE_NAME = 'torneo-padel-v9';
-const ASSETS = [
-  './',
-  './index.html',
+const CACHE_NAME = 'torneo-padel-v10';
+const STATIC_ASSETS = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -9,7 +7,7 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).catch(() => {})
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -24,12 +22,26 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((res) => {
-        return res;
-      }).catch(() => cached);
-    })
-  );
+  const req = event.request;
+  const isAppShell = req.mode === 'navigate' || req.destination === 'document' ||
+                      req.url.endsWith('/') || req.url.endsWith('index.html');
+
+  if (isAppShell) {
+    // Red primero: así cada actualización se ve de inmediato con internet.
+    // Si no hay conexión, usa la última copia guardada.
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+  } else {
+    // Assets estáticos (icono, manifest): caché primero, ya que casi no cambian.
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req))
+    );
+  }
 });
