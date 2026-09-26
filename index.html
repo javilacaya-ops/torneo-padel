@@ -314,25 +314,51 @@ function buildSchedule(realN, courts, ensureOpponents, numGroups){
   const groups = numGroups && numGroups>1 ? numGroups : 1;
   const sizes = splitIntoGroups(realN, groups);
   let offset = 0;
-  let allMatches = [];
+  const queues = []; // una cola de partidos por grupo, en numeración global
   let fillerCount = 0, extraOpponentCount = 0;
   sizes.forEach((size, gi)=>{
     const {matches, fillerCount:fc, extraOpponentCount:eo} = buildGroupMatches(size, ensureOpponents);
-    matches.forEach(m=>{
-      allMatches.push({
-        a: m.a.map(p=>p+offset),
-        b: m.b.map(p=>p+offset),
-        filler: m.filler,
-        extraOpponent: !!m.extraOpponent,
-        group: gi
-      });
-    });
+    queues.push(matches.map(m=>({
+      a: m.a.map(p=>p+offset),
+      b: m.b.map(p=>p+offset),
+      filler: m.filler,
+      extraOpponent: !!m.extraOpponent,
+      group: gi
+    })));
     fillerCount += fc;
     extraOpponentCount += eo;
     offset += size;
   });
-  const physRounds = assignRounds(allMatches, courts);
-  return {physRounds, totalMatches: allMatches.length, fillerCount, extraOpponentCount, groupSizes: sizes};
+
+  // Para cada ronda y cancha, el grupo "de turno" rota con (ronda+cancha) % grupos,
+  // así cada cancha va alternando entre los grupos ronda tras ronda.
+  const physRounds = [];
+  let round = 0;
+  while(queues.some(q=>q.length>0)){
+    const roundMatches = new Array(courts).fill(null);
+    const usedPlayers = new Set();
+    let anyFound = false;
+    for(let ci=0; ci<courts; ci++){
+      const gi = (round+ci) % groups;
+      const q = queues[gi];
+      let foundIdx = -1;
+      for(let k=0; k<q.length; k++){
+        const ps = [...q[k].a, ...q[k].b];
+        if(ps.every(p=>!usedPlayers.has(p))){ foundIdx = k; break; }
+      }
+      if(foundIdx!==-1){
+        const m = q.splice(foundIdx,1)[0];
+        roundMatches[ci] = m;
+        [...m.a,...m.b].forEach(p=>usedPlayers.add(p));
+        anyFound = true;
+      }
+    }
+    if(anyFound) physRounds.push(roundMatches);
+    round++;
+    if(round>10000) break; // salvaguarda ante datos inesperados
+  }
+  const totalMatches = physRounds.reduce((s,r)=>s+r.filter(Boolean).length,0);
+  return {physRounds, totalMatches, fillerCount, extraOpponentCount, groupSizes: sizes};
 }
 
 // Reparte N jugadores en `numGroups` grupos lo más parejos posible (diferencia máx. de 1 entre grupos)
@@ -506,6 +532,7 @@ function makeTournament(name, mode, N, courts, groups){
   const scores = {};
   physRounds.forEach((round, ri)=>{
     round.forEach((m, ci)=>{
+      if(!m) return;
       scores[ri+'-'+ci] = emptyScore(mode);
     });
   });
@@ -604,6 +631,7 @@ function computeRanking(t, groupIndex){
   playerIds.forEach(i=>{ gf[i]=0; gc[i]=0; pj[i]=0; });
   t.physRounds.forEach((round, ri)=>{
     round.forEach((m, ci)=>{
+      if(!m) return;
       if(groupIndex!==undefined && (m.group||0)!==groupIndex) return;
       const sc = t.scores[ri+'-'+ci];
       const res = computeMatchResult(t.mode, sc);
@@ -726,10 +754,13 @@ function renderPlayersGrid(){
   grid.innerHTML = '';
   const t = activeTournament();
   if(!t) return;
-  for(let i=1;i<=t.N;i++){
+  const numGroups = t.groups || 1;
+
+  function buildInput(i){
     const wrap = document.createElement('div');
     const label = document.createElement('span');
-    label.className='pn'; label.textContent = 'Jugador '+i;
+    label.className='pn';
+    label.textContent = 'Jugador '+i;
     const input = document.createElement('input');
     input.type='text'; input.value = t.players[i]; input.dataset.num = i;
     input.disabled = false;
@@ -738,7 +769,20 @@ function renderPlayersGrid(){
       renderCalendario(); renderRanking(); renderTournamentSelector(); saveApp();
     });
     wrap.appendChild(label); wrap.appendChild(input);
-    grid.appendChild(wrap);
+    return wrap;
+  }
+
+  if(numGroups<=1){
+    for(let i=1;i<=t.N;i++) grid.appendChild(buildInput(i));
+  } else {
+    for(let gi=0; gi<numGroups; gi++){
+      const {start, end} = groupPlayerRange(t, gi);
+      const heading = document.createElement('div');
+      heading.style.cssText = 'grid-column:1 / -1;font-weight:700;font-size:12.5px;color:var(--navy);margin-top:8px;';
+      heading.textContent = 'Grupo ' + String.fromCharCode(65+gi) + ' (' + (end-start+1) + ' jugadores)';
+      grid.appendChild(heading);
+      for(let i=start; i<=end; i++) grid.appendChild(buildInput(i));
+    }
   }
 }
 
@@ -822,10 +866,10 @@ function renderCalendario(){
     const head = document.createElement('div');
     head.className='round-head';
     const activePlayers = new Set();
-    round.forEach(m=>{ [...m.a, ...m.b].forEach(p=>activePlayers.add(p)); });
+    round.forEach(m=>{ if(!m) return; [...m.a, ...m.b].forEach(p=>activePlayers.add(p)); });
     const resting = [];
     for(let i=1;i<=t.N;i++){ if(!activePlayers.has(i)) resting.push(playerName(t,i)); }
-    head.innerHTML = '<span class="rn">Ronda '+(ri+1)+'</span><span class="rt">'+round.length+' cancha(s) en juego</span>';
+    head.innerHTML = '<span class="rn">Ronda '+(ri+1)+'</span><span class="rt">'+round.filter(Boolean).length+' cancha(s) en juego</span>';
     div.appendChild(head);
     if(resting.length>0){
       const restDiv = document.createElement('div');
@@ -836,6 +880,7 @@ function renderCalendario(){
     }
 
     round.forEach((m, ci)=>{
+      if(!m) return;
       const key = ri+'-'+ci;
       const sc = t.scores[key];
       const res = computeMatchResult(t.mode, sc);
@@ -1102,7 +1147,7 @@ document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
   let roundsHtml = '';
   t.physRounds.forEach((round, ri)=>{
     const activePlayers = new Set();
-    round.forEach(m=>{ [...m.a, ...m.b].forEach(p=>activePlayers.add(p)); });
+    round.forEach(m=>{ if(!m) return; [...m.a, ...m.b].forEach(p=>activePlayers.add(p)); });
     const resting = [];
     for(let i=1;i<=t.N;i++){ if(!activePlayers.has(i)) resting.push(escapeHtml(playerName(t,i))); }
     roundsHtml += '<div class="pr-round"><h3>Ronda ' + (ri+1) + '</h3>';
@@ -1110,6 +1155,7 @@ document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
       roundsHtml += '<div class="pr-resting">Descansan: ' + resting.join(', ') + '</div>';
     }
     round.forEach((m, ci)=>{
+      if(!m) return;
       const sc = t.scores[ri+'-'+ci];
       const res = computeMatchResult(t.mode, sc);
       const scoreText = scoreTextForPdf(t.mode, sc, res);
