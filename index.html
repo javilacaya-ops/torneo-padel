@@ -130,6 +130,7 @@
 
   <div class="tsel">
     <select id="tournamentSelector"></select>
+
   </div>
 
   <div class="tabs" id="tabsBar">
@@ -174,6 +175,12 @@
         <option value="3">3 canchas</option>
         <option value="4">4 canchas</option>
       </select>
+      <div class="note" id="groupsField" style="margin-top:10px;">Grupos (solo americano)</div>
+      <select id="newGroups">
+        <option value="1" selected>Sin grupos (todos contra todos)</option>
+        <option value="2">2 grupos</option>
+        <option value="3">3 grupos</option>
+      </select>
       <div class="note" id="newFormatSummary" style="margin-top:8px;"></div>
       <div class="actions">
         <button id="btnCreateTournament">Crear torneo</button>
@@ -200,13 +207,8 @@
   </div>
 
   <div id="tab-ranking" class="hidden">
+    <div id="rankingContainer"></div>
     <div class="card">
-      <h2>Clasificación individual</h2>
-      <table class="rank">
-        <thead><tr><th>#</th><th>Jugador</th><th style="text-align:right">PJ</th><th style="text-align:right">GF</th><th style="text-align:right">GC</th><th style="text-align:right">Dif</th><th style="text-align:right">GF/GC</th></tr></thead>
-        <tbody id="rankBody"></tbody>
-      </table>
-      <div class="note" style="margin-top:8px;">Ordenado por relación GF/GC (games ganados ÷ games perdidos). PJ = partidos jugados.</div>
       <div class="actions">
         <button class="secondary" id="btnPdfRanking" type="button">Descargar PDF de ranking</button>
       </div>
@@ -308,32 +310,66 @@ function assignRounds(matches, courts){
   return rounds;
 }
 
-function buildSchedule(realN, courts, ensureOpponents){
-  const N = realN % 2 === 0 ? realN : realN + 1;
-  const BYE = realN % 2 === 0 ? null : N;
+function buildSchedule(realN, courts, ensureOpponents, numGroups){
+  const groups = numGroups && numGroups>1 ? numGroups : 1;
+  const sizes = splitIntoGroups(realN, groups);
+  let offset = 0;
+  let allMatches = [];
+  let fillerCount = 0, extraOpponentCount = 0;
+  sizes.forEach((size, gi)=>{
+    const {matches, fillerCount:fc, extraOpponentCount:eo} = buildGroupMatches(size, ensureOpponents);
+    matches.forEach(m=>{
+      allMatches.push({
+        a: m.a.map(p=>p+offset),
+        b: m.b.map(p=>p+offset),
+        filler: m.filler,
+        extraOpponent: !!m.extraOpponent,
+        group: gi
+      });
+    });
+    fillerCount += fc;
+    extraOpponentCount += eo;
+    offset += size;
+  });
+  const physRounds = assignRounds(allMatches, courts);
+  return {physRounds, totalMatches: allMatches.length, fillerCount, extraOpponentCount, groupSizes: sizes};
+}
+
+// Reparte N jugadores en `numGroups` grupos lo más parejos posible (diferencia máx. de 1 entre grupos)
+function splitIntoGroups(N, numGroups){
+  const base = Math.floor(N/numGroups);
+  const remainder = N % numGroups;
+  const sizes = Array(numGroups).fill(base);
+  for(let i=0;i<remainder;i++) sizes[i]++;
+  return sizes;
+}
+
+// Un grupo necesita al menos 4 jugadores para poder formar un partido de dobles
+function groupsFeasible(N, numGroups){
+  if(numGroups<=1) return true;
+  const sizes = splitIntoGroups(N, numGroups);
+  return Math.min(...sizes) >= 4;
+}
+
+// Arma el calendario (parejas, y rivalidades si aplica) de un solo grupo, en numeración local 1..size
+function buildGroupMatches(size, ensureOpponents){
+  const N = size % 2 === 0 ? size : size + 1;
+  const BYE = size % 2 === 0 ? null : N;
   const megarounds = circleFactorization(N);
   let queue = [];
   megarounds.forEach(r=>r.forEach(p=>{
     if(BYE && (p[0]===BYE || p[1]===BYE)) return;
     queue.push(p);
   }));
-  let allMatches, fillerCount, extraOpponentCount = 0;
   if(ensureOpponents){
-    // Modalidad americano: arma las parejas priorizando en cada partido rivalidades
-    // todavía no vistas, para minimizar los partidos extra necesarios al final.
     const smart = buildMatchesSmart(queue);
-    fillerCount = smart.fillerCount;
-    const missing = computeMissingOpponentPairs(smart.coveredOpponents, realN);
-    const extra = buildOpponentFillerMatches(missing, realN);
-    extraOpponentCount = extra.length;
-    allMatches = smart.matches.concat(extra);
+    const missing = computeMissingOpponentPairs(smart.coveredOpponents, size);
+    const extra = buildOpponentFillerMatches(missing, size);
+    return {matches: smart.matches.concat(extra), fillerCount: smart.fillerCount, extraOpponentCount: extra.length};
   } else {
     const basic = buildMatches(queue);
-    fillerCount = basic.fillerCount;
-    allMatches = basic.matches;
+    return {matches: basic.matches, fillerCount: basic.fillerCount, extraOpponentCount: 0};
   }
-  const physRounds = assignRounds(allMatches, courts);
-  return {physRounds, totalMatches: allMatches.length, fillerCount, extraOpponentCount};
 }
 
 // Variante de buildMatches que, en cada paso, elige entre las parejas restantes la que
@@ -449,6 +485,7 @@ function computeMatchResult(mode, sc){
   return {complete:true, error:false, needsTiebreak:true, gamesA, gamesB, winner:w3};
 }
 
+/* ============ Roles y sesión ============ */
 /* ============ Almacenamiento multi-torneo (máx 4) ============ */
 const STORAGE_KEY = 'padel-app-state-v2';
 const OLD_STORAGE_KEY = 'padel-tournament-state-v1';
@@ -460,9 +497,10 @@ function activeTournament(){
   return app.tournaments[app.activeId];
 }
 
-function makeTournament(name, mode, N, courts){
+function makeTournament(name, mode, N, courts, groups){
   const ensureOpponents = (mode === 'americano');
-  const {physRounds, totalMatches, fillerCount, extraOpponentCount} = buildSchedule(N, courts, ensureOpponents);
+  const numGroups = (mode === 'americano' && groups>1) ? groups : 1;
+  const {physRounds, totalMatches, fillerCount, extraOpponentCount, groupSizes} = buildSchedule(N, courts, ensureOpponents, numGroups);
   const players = {};
   for(let i=1;i<=N;i++) players[i] = 'Jugador ' + i;
   const scores = {};
@@ -474,7 +512,7 @@ function makeTournament(name, mode, N, courts){
   return {
     id: 't' + Date.now() + Math.floor(Math.random()*1000),
     name: name || 'Torneo',
-    mode, N, courts, players, physRounds, totalMatches, fillerCount, extraOpponentCount, scores
+    mode, N, courts, groups: numGroups, groupSizes, players, physRounds, totalMatches, fillerCount, extraOpponentCount, scores
   };
 }
 
@@ -511,11 +549,15 @@ function saveApp(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(app)); }catch(e){}
 }
 
-function createTournament(name, mode, N, courts){
+function createTournament(name, mode, N, courts, groups){
   if(app.order.length >= MAX_TOURNAMENTS){
     return {ok:false, msg:'Ya tienes ' + MAX_TOURNAMENTS + ' torneos guardados. Borra uno antes de crear otro.'};
   }
-  const t = makeTournament(name, mode, N, courts);
+  if(mode === 'americano' && groups>1 && !groupsFeasible(N, groups)){
+    const sizes = splitIntoGroups(N, groups);
+    return {ok:false, msg:'Con ' + N + ' jugadores en ' + groups + ' grupos, algún grupo quedaría con solo ' + Math.min(...sizes) + ' (mínimo 4 por grupo). Elige más jugadores o menos grupos.'};
+  }
+  const t = makeTournament(name, mode, N, courts, groups);
   app.tournaments[t.id] = t;
   app.order.push(t.id);
   app.activeId = t.id;
@@ -541,23 +583,40 @@ function escapeHtml(str){
 }
 function playerName(t, num){ return t.players[num] || ('Jugador '+num); }
 
-function computeRanking(t){
+function groupPlayerRange(t, gi){
+  const sizes = t.groupSizes && t.groupSizes.length ? t.groupSizes : [t.N];
+  let offset = 0;
+  for(let i=0;i<gi;i++) offset += sizes[i];
+  return {start: offset+1, end: offset+sizes[gi]};
+}
+
+function computeRanking(t, groupIndex){
+  let playerIds;
+  if(groupIndex===undefined || !t.groupSizes || t.groupSizes.length<=1){
+    playerIds = [];
+    for(let i=1;i<=t.N;i++) playerIds.push(i);
+  } else {
+    const {start, end} = groupPlayerRange(t, groupIndex);
+    playerIds = [];
+    for(let i=start;i<=end;i++) playerIds.push(i);
+  }
   const gf={}, gc={}, pj={};
-  for(let i=1;i<=t.N;i++){ gf[i]=0; gc[i]=0; pj[i]=0; }
+  playerIds.forEach(i=>{ gf[i]=0; gc[i]=0; pj[i]=0; });
   t.physRounds.forEach((round, ri)=>{
     round.forEach((m, ci)=>{
+      if(groupIndex!==undefined && (m.group||0)!==groupIndex) return;
       const sc = t.scores[ri+'-'+ci];
       const res = computeMatchResult(t.mode, sc);
       if(!res.complete) return;
-      m.a.forEach(p=>{ gf[p]+=res.gamesA; gc[p]+=res.gamesB; pj[p]+=1; });
-      m.b.forEach(p=>{ gf[p]+=res.gamesB; gc[p]+=res.gamesA; pj[p]+=1; });
+      m.a.forEach(p=>{ if(gf[p]===undefined) return; gf[p]+=res.gamesA; gc[p]+=res.gamesB; pj[p]+=1; });
+      m.b.forEach(p=>{ if(gf[p]===undefined) return; gf[p]+=res.gamesB; gc[p]+=res.gamesA; pj[p]+=1; });
     });
   });
   const rows = [];
-  for(let i=1;i<=t.N;i++){
+  playerIds.forEach(i=>{
     const ratio = gc[i]>0 ? gf[i]/gc[i] : (gf[i]>0 ? gf[i] : 0);
     rows.push({num:i, name:playerName(t,i), pj:pj[i], gf:gf[i], gc:gc[i], diff:gf[i]-gc[i], ratio});
-  }
+  });
   rows.sort((a,b)=> b.ratio-a.ratio || b.diff-a.diff);
   return rows;
 }
@@ -598,7 +657,8 @@ function renderTournamentList(){
     div.innerHTML =
       '<div class="tname">' + escapeHtml(t.name) +
       '<span class="badge ' + t.mode + '">' + (t.mode==='regular'?'Regular':'Americano') + '</span></div>' +
-      '<div class="tmeta">' + t.N + ' jugadores &middot; ' + t.courts + ' cancha(s) &middot; ' + t.physRounds.length + ' rondas</div>' +
+      '<div class="tmeta">' + t.N + ' jugadores &middot; ' + t.courts + ' cancha(s) &middot; ' + t.physRounds.length + ' rondas' +
+      ((t.groups||1)>1 ? ' &middot; ' + t.groups + ' grupos' : '') + '</div>' +
       '<div class="tactions">' +
         (id!==app.activeId ? '<button class="secondary tsel-btn" data-id="'+id+'">Seleccionar</button>' : '') +
         '<button class="secondary trename-btn" data-id="'+id+'">Renombrar</button>' +
@@ -626,16 +686,38 @@ function renderNewFormatSummary(){
   const courts = Number(document.getElementById('newCourtCount').value);
   const mode = document.getElementById('newMode').value;
   const ensureOpponents = (mode === 'americano');
+  const groups = (mode === 'americano') ? Number(document.getElementById('newGroups').value) : 1;
+  const groupsSelect = document.getElementById('newGroups');
+  const groupsLabel = document.getElementById('groupsField');
+  groupsSelect.classList.toggle('hidden', mode !== 'americano');
+  groupsLabel.classList.toggle('hidden', mode !== 'americano');
+
+  if(mode === 'americano' && groups>1 && !groupsFeasible(N, groups)){
+    const sizes = splitIntoGroups(N, groups);
+    document.getElementById('newFormatSummary').innerHTML =
+      '<span style="color:#D85A30;">Con ' + N + ' jugadores en ' + groups + ' grupos, un grupo quedaría con solo ' +
+      Math.min(...sizes) + ' jugador(es) (mínimo 4 por grupo). Elige más jugadores o menos grupos.</span>';
+    return;
+  }
+
   const minutesPerRound = 25;
-  const {totalMatches, fillerCount, extraOpponentCount, physRounds} = buildSchedule(N, courts, ensureOpponents);
+  const {totalMatches, fillerCount, extraOpponentCount, physRounds, groupSizes} = buildSchedule(N, courts, ensureOpponents, groups);
   const rounds = physRounds.length;
   const totalMin = rounds*minutesPerRound;
   const h = Math.floor(totalMin/60), m = totalMin%60;
-  document.getElementById('newFormatSummary').innerHTML =
+  let html =
     N + ' jugadores, ' + courts + ' cancha(s) &rarr; ' + totalMatches + ' partidos &middot; ' + rounds + ' rondas &middot; ' +
-    '&asymp; ' + h + 'h' + (m? ' '+m+'min':'') + ' de juego' +
-    (fillerCount>0 ? '<br>Incluye ' + fillerCount + ' partido(s) de relleno (repetición) por número impar de parejas.' : '') +
-    (extraOpponentCount>0 ? '<br>Incluye ' + extraOpponentCount + ' partido(s) extra para que todos se enfrenten como rivales al menos una vez.' : '');
+    '&asymp; ' + h + 'h' + (m? ' '+m+'min':'') + ' de juego';
+  if(groups>1){
+    html += '<br>Grupos: ' + groupSizes.map((s,i)=>'Grupo '+String.fromCharCode(65+i)+' ('+s+')').join(', ');
+  }
+  if(fillerCount>0){
+    html += '<br>Incluye ' + fillerCount + ' partido(s) de relleno (repetición) por número impar de parejas.';
+  }
+  if(extraOpponentCount>0){
+    html += '<br>Incluye ' + extraOpponentCount + ' partido(s) extra para que todos se enfrenten como rivales al menos una vez.';
+  }
+  document.getElementById('newFormatSummary').innerHTML = html;
 }
 
 /* ============ Render: jugadores, métricas, calendario, ranking ============ */
@@ -766,6 +848,7 @@ function renderCalendario(){
       inputsHtml = inputsHtml.replace('__A__', nameA).replace('__B__', nameB);
       mdiv.innerHTML =
         '<span class="court">Cancha '+(ci+1)+'</span>' +
+        ((t.groups||1)>1 ? '<span class="badge americano" style="margin-left:0;">Grupo '+String.fromCharCode(65+(m.group||0))+'</span>' : '') +
         (m.filler? '<span class="filler">Relleno</span>':'') +
         (m.extraOpponent? '<span class="filler" style="background:#E4EEFB;color:#1F5FA8;">Extra rival</span>':'') +
         (t.mode==='regular' ? ('<div class="pair-line"><b>'+nameA+'</b></div><div class="vs">vs</div><div class="pair-line"><b>'+nameB+'</b></div>') : '') +
@@ -795,25 +878,45 @@ function renderCalendario(){
   }
 }
 
-function renderRanking(){
-  const t = activeTournament();
-  const body = document.getElementById('rankBody');
-  body.innerHTML = '';
-  if(!t) return;
-  const rows = computeRanking(t);
+function rankTableHtml(rows, heading){
+  let html = '<div class="card">';
+  if(heading) html += '<h2>'+escapeHtml(heading)+'</h2>';
+  else html += '<h2>Clasificación individual</h2>';
+  html +=
+    '<table class="rank"><thead><tr><th>#</th><th>Jugador</th><th style="text-align:right">PJ</th>' +
+    '<th style="text-align:right">GF</th><th style="text-align:right">GC</th><th style="text-align:right">Dif</th>' +
+    '<th style="text-align:right">GF/GC</th></tr></thead><tbody>';
   rows.forEach((r, idx)=>{
-    const tr = document.createElement('tr');
     const posClass = idx===0?'pos p1':(idx===1?'pos p2':(idx===2?'pos p3':'pos'));
-    tr.innerHTML =
-      '<td><span class="'+posClass+'">'+(idx+1)+'</span></td>' +
+    html +=
+      '<tr><td><span class="'+posClass+'">'+(idx+1)+'</span></td>' +
       '<td>'+escapeHtml(r.name)+'</td>' +
       '<td class="num">'+r.pj+'</td>' +
       '<td class="num">'+r.gf+'</td>' +
       '<td class="num">'+r.gc+'</td>' +
       '<td class="num">'+(r.diff>0?'+':'')+r.diff+'</td>' +
-      '<td class="num">'+r.ratio.toFixed(2)+'</td>';
-    body.appendChild(tr);
+      '<td class="num">'+r.ratio.toFixed(2)+'</td></tr>';
   });
+  html += '</tbody></table>' +
+    '<div class="note" style="margin-top:8px;">Ordenado por relación GF/GC (games ganados ÷ games perdidos). PJ = partidos jugados.</div></div>';
+  return html;
+}
+
+function renderRanking(){
+  const t = activeTournament();
+  const container = document.getElementById('rankingContainer');
+  container.innerHTML = '';
+  if(!t) return;
+  const numGroups = t.groups || 1;
+  if(numGroups<=1){
+    container.innerHTML = rankTableHtml(computeRanking(t));
+  } else {
+    let html = '';
+    for(let gi=0; gi<numGroups; gi++){
+      html += rankTableHtml(computeRanking(t, gi), 'Grupo ' + String.fromCharCode(65+gi));
+    }
+    container.innerHTML = html;
+  }
 }
 
 function renderAll(){
@@ -826,7 +929,7 @@ function renderAll(){
   renderRanking();
 }
 
-/* ============ Eventos: tabs, selector de torneo ============ */
+/* ============ Eventos: tabs, selector de torneo, login ============ */
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click', ()=>{
     if(t.classList.contains('hidden')) return;
@@ -845,13 +948,15 @@ document.getElementById('tournamentSelector').addEventListener('change', (e)=>{
 document.getElementById('newPlayerCount').addEventListener('change', renderNewFormatSummary);
 document.getElementById('newCourtCount').addEventListener('change', renderNewFormatSummary);
 document.getElementById('newMode').addEventListener('change', renderNewFormatSummary);
+document.getElementById('newGroups').addEventListener('change', renderNewFormatSummary);
 
 document.getElementById('btnCreateTournament').addEventListener('click', ()=>{
   const name = document.getElementById('newTournamentName').value.trim() || ('Torneo ' + (app.order.length+1));
   const mode = document.getElementById('newMode').value;
   const N = Number(document.getElementById('newPlayerCount').value);
   const courts = Number(document.getElementById('newCourtCount').value);
-  const result = createTournament(name, mode, N, courts);
+  const groups = (mode === 'americano') ? Number(document.getElementById('newGroups').value) : 1;
+  const result = createTournament(name, mode, N, courts, groups);
   const statusEl = document.getElementById('createStatus');
   if(!result.ok){
     statusEl.textContent = result.msg;
@@ -1010,6 +1115,7 @@ document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
       const scoreText = scoreTextForPdf(t.mode, sc, res);
       roundsHtml +=
         '<div class="pr-match"><span class="pr-court">Cancha ' + (ci+1) + '</span>' +
+        ((t.groups||1)>1 ? '<span class="pr-court" style="color:#1F5FA8;">Grupo ' + String.fromCharCode(65+(m.group||0)) + '</span>' : '') +
         (m.filler ? '<span class="pr-filler">(Relleno)</span>' : '') +
         (m.extraOpponent ? '<span class="pr-filler" style="color:#1F5FA8;">(Extra rival)</span>' : '') +
         '<span class="pr-score">' + scoreText + '</span><br>' +
@@ -1032,19 +1138,33 @@ document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
 document.getElementById('btnPdfRanking').addEventListener('click', ()=>{
   const t = activeTournament();
   if(!t) return;
-  const rows = computeRanking(t);
-  const trs = rows.map((r, idx)=>
-    '<tr><td>' + (idx+1) + '</td><td>' + escapeHtml(r.name) + '</td>' +
-    '<td class="num">' + r.pj + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.gc + '</td>' +
-    '<td class="num">' + (r.diff>0?'+':'') + r.diff + '</td><td class="num">' + r.ratio.toFixed(2) + '</td></tr>'
-  ).join('');
+  const numGroups = t.groups || 1;
+  const buildTable = (rows)=>{
+    const trs = rows.map((r, idx)=>
+      '<tr><td>' + (idx+1) + '</td><td>' + escapeHtml(r.name) + '</td>' +
+      '<td class="num">' + r.pj + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.gc + '</td>' +
+      '<td class="num">' + (r.diff>0?'+':'') + r.diff + '</td><td class="num">' + r.ratio.toFixed(2) + '</td></tr>'
+    ).join('');
+    return '<table><thead><tr><th>#</th><th>Jugador</th><th class="num">PJ</th><th class="num">GF</th>' +
+      '<th class="num">GC</th><th class="num">Dif</th><th class="num">GF/GC</th></tr></thead>' +
+      '<tbody>' + trs + '</tbody></table>';
+  };
+
+  let tables = '';
+  if(numGroups<=1){
+    tables = buildTable(computeRanking(t));
+  } else {
+    for(let gi=0; gi<numGroups; gi++){
+      tables += '<h3 style="margin-top:18px;">Grupo ' + String.fromCharCode(65+gi) + '</h3>' + buildTable(computeRanking(t, gi));
+    }
+  }
 
   const body =
     '<h1>Ranking Individual — ' + escapeHtml(t.name) + '</h1>' +
-    '<div class="pr-meta">' + (t.mode==='regular'?'Regular':'Americano') + ' &middot; ' + t.N + ' jugadores &middot; generado el ' + new Date().toLocaleString() + '</div>' +
-    '<table><thead><tr><th>#</th><th>Jugador</th><th class="num">PJ</th><th class="num">GF</th>' +
-    '<th class="num">GC</th><th class="num">Dif</th><th class="num">GF/GC</th></tr></thead>' +
-    '<tbody>' + trs + '</tbody></table>' +
+    '<div class="pr-meta">' + (t.mode==='regular'?'Regular':'Americano') + ' &middot; ' + t.N + ' jugadores' +
+    (numGroups>1 ? ' &middot; ' + numGroups + ' grupos' : '') +
+    ' &middot; generado el ' + new Date().toLocaleString() + '</div>' +
+    tables +
     '<div class="pr-meta" style="margin-top:10px;">GF/GC = games ganados &divide; games perdidos. PJ = partidos jugados.</div>';
 
   openPrintWindow('Ranking Individual', body);
