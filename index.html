@@ -159,6 +159,11 @@
         <option value="regular">Regular (2 sets + super tiebreak a 10)</option>
         <option value="draw">Draw con eliminación directa (desde octavos)</option>
       </select>
+      <div class="note" id="inscField" style="margin-top:10px;">Inscripción (solo regular)</div>
+      <select id="newInscription">
+        <option value="individual" selected>Individual (todos hacen pareja con todos)</option>
+        <option value="pairs">Por parejas fijas (pareja contra pareja)</option>
+      </select>
       <div class="note" id="countLabel" style="margin-top:10px;">Número de inscritos</div>
       <select id="newPlayerCount">
         <option value="8">8 jugadores</option>
@@ -190,7 +195,12 @@
         <option value="4" selected>4 games por partido</option>
         <option value="6">6 games por partido</option>
       </select>
-      <div class="note" id="groupsField" style="margin-top:10px;">Grupos (solo americano)</div>
+      <div class="note" id="setField" style="margin-top:10px;">Formato de set (solo regular)</div>
+      <select id="newSetFormat">
+        <option value="set" selected>Set a 6 games (tiebreak si empatan 6-6)</option>
+        <option value="short">Short set a 4 games (tiebreak si empatan 3-3)</option>
+      </select>
+      <div class="note" id="groupsField" style="margin-top:10px;">Grupos (americano o regular)</div>
       <select id="newGroups">
         <option value="1" selected>Sin grupos (todos contra todos)</option>
         <option value="2">2 grupos</option>
@@ -277,8 +287,9 @@ function circleFactorization(N){
   return rounds;
 }
 
-function buildMatches(queue){
+function buildMatches(queue, dropFiller){
   const matches = [];
+  const leftover = [];
   let fillerCount = 0;
   while(queue.length>0){
     const p1 = queue.shift();
@@ -288,6 +299,7 @@ function buildMatches(queue){
       if(p2[0]!==p1[0] && p2[0]!==p1[1] && p2[1]!==p1[0] && p2[1]!==p1[1]){ idx=i; break; }
     }
     if(idx===-1){
+      if(dropFiller){ leftover.push(p1); continue; }
       let fillerPartner = null;
       outer:
       for(const m of matches){
@@ -302,7 +314,7 @@ function buildMatches(queue){
       matches.push({a:p1, b:p2, filler:false});
     }
   }
-  return {matches, fillerCount};
+  return {matches, fillerCount, leftover};
 }
 
 function assignRounds(matches, courts){
@@ -326,24 +338,55 @@ function assignRounds(matches, courts){
   return rounds;
 }
 
-function buildSchedule(realN, courts, ensureOpponents, numGroups){
+function buildSchedule(realN, courts, ensureOpponents, numGroups, pairMode){
   const groups = numGroups && numGroups>1 ? numGroups : 1;
-  const sizes = splitIntoGroups(realN, groups);
-  let offset = 0;
-  const queues = []; // una cola de partidos por grupo, en numeración global
+  const sizes = splitIntoGroups(realN, groups);   // en jugadores, o en parejas si pairMode
+  const unit = pairMode ? 2 : 1;                  // jugadores por unidad
+  const builder = (size, drop)=> pairMode ? buildPairGroupMatches(size) : buildGroupMatches(size, ensureOpponents, drop);
+
+  let results = sizes.map(size=>builder(size, false));
+  // Grupos con una pareja sobrante: se cruzan de dos en dos (partido entre grupos) en vez de repetir una pareja
+  let crossPairs = [];
+  if(!pairMode && groups>1){
+    const withFiller = [];
+    results.forEach((r,i)=>{ if(r.fillerCount===1) withFiller.push(i); });
+    for(let k=0;k+1<withFiller.length;k+=2){
+      const x = withFiller[k], y = withFiller[k+1];
+      const rx = builder(sizes[x], true), ry = builder(sizes[y], true);
+      if(rx.leftover.length===1 && ry.leftover.length===1){
+        results[x] = rx; results[y] = ry;
+        crossPairs.push({x, y, px: rx.leftover[0], py: ry.leftover[0]});
+      }
+    }
+  }
+
+  const offsets = []; { let o=0; sizes.forEach(sz=>{ offsets.push(o); o+=sz; }); }
+  const mapPlayer = (gi, p)=> pairMode ? null : p + offsets[gi];
+  const mapUnit = (gi, p)=>{
+    if(!pairMode) return [p + offsets[gi]];
+    const k = p + offsets[gi];            // número de pareja global
+    return [2*k-1, 2*k];
+  };
+  const queues = [];
   let fillerCount = 0, extraOpponentCount = 0;
   sizes.forEach((size, gi)=>{
-    const {matches, fillerCount:fc, extraOpponentCount:eo} = buildGroupMatches(size, ensureOpponents);
-    queues.push(matches.map(m=>({
-      a: m.a.map(p=>p+offset),
-      b: m.b.map(p=>p+offset),
+    const r = results[gi];
+    queues.push(r.matches.map(m=>({
+      a: pairMode ? mapUnit(gi, m.a[0]) : m.a.map(p=>p+offsets[gi]),
+      b: pairMode ? mapUnit(gi, m.b[0]) : m.b.map(p=>p+offsets[gi]),
       filler: m.filler,
       extraOpponent: !!m.extraOpponent,
       group: gi
     })));
-    fillerCount += fc;
-    extraOpponentCount += eo;
-    offset += size;
+    fillerCount += r.fillerCount;
+    extraOpponentCount += r.extraOpponentCount;
+  });
+  crossPairs.forEach(c=>{
+    queues[c.x].push({
+      a: c.px.map(p=>p+offsets[c.x]),
+      b: c.py.map(p=>p+offsets[c.y]),
+      filler:false, extraOpponent:false, group:c.x, cross:c.y
+    });
   });
 
   // Para cada ronda y cancha, el grupo "de turno" rota con (ronda+cancha) % grupos,
@@ -374,7 +417,8 @@ function buildSchedule(realN, courts, ensureOpponents, numGroups){
     if(round>10000) break; // salvaguarda ante datos inesperados
   }
   const totalMatches = physRounds.reduce((s,r)=>s+r.filter(Boolean).length,0);
-  return {physRounds, totalMatches, fillerCount, extraOpponentCount, groupSizes: sizes};
+  return {physRounds, totalMatches, fillerCount, extraOpponentCount, crossCount: crossPairs.length,
+          groupSizes: sizes.map(x=>x*unit)};
 }
 
 // Reparte N jugadores en `numGroups` grupos lo más parejos posible (diferencia máx. de 1 entre grupos)
@@ -387,38 +431,79 @@ function splitIntoGroups(N, numGroups){
 }
 
 // Un grupo necesita al menos 4 jugadores para poder formar un partido de dobles
-function groupsFeasible(N, numGroups){
+function groupsFeasible(N, numGroups, pairMode){
   if(numGroups<=1) return true;
   const sizes = splitIntoGroups(N, numGroups);
-  return Math.min(...sizes) >= 4;
+  return Math.min(...sizes) >= (pairMode ? 3 : 4);
+}
+function groupsError(N, groups, pairMode){
+  const sizes = splitIntoGroups(N, groups);
+  return pairMode
+    ? 'Con ' + N + ' parejas en ' + groups + ' grupos, un grupo quedaría con solo ' + Math.min(...sizes) + ' (mínimo 3 parejas por grupo). Elige más parejas o menos grupos.'
+    : 'Con ' + N + ' jugadores en ' + groups + ' grupos, un grupo quedaría con solo ' + Math.min(...sizes) + ' (mínimo 4 por grupo). Elige más jugadores o menos grupos.';
 }
 
 // Arma el calendario (parejas, y rivalidades si aplica) de un solo grupo, en numeración local 1..size
-function buildGroupMatches(size, ensureOpponents){
+function seededRng(seed){
+  let a = seed>>>0;
+  return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a>>>15, 1 | a); t = t + Math.imul(t ^ t>>>7, 61 | t) ^ t; return ((t ^ t>>>14) >>> 0) / 4294967296; };
+}
+
+// dropFiller=true: la pareja sobrante NO se repite como "relleno": se devuelve en `leftover`
+// para que buildSchedule la cruce con la sobrante de otro grupo (partido entre grupos).
+function buildGroupMatches(size, ensureOpponents, dropFiller){
   const N = size % 2 === 0 ? size : size + 1;
   const BYE = size % 2 === 0 ? null : N;
-  const megarounds = circleFactorization(N);
-  let queue = [];
-  megarounds.forEach(r=>r.forEach(p=>{
-    if(BYE && (p[0]===BYE || p[1]===BYE)) return;
-    queue.push(p);
-  }));
-  if(ensureOpponents){
-    const smart = buildMatchesSmart(queue);
-    const missing = computeMissingOpponentPairs(smart.coveredOpponents, size);
-    const extra = buildOpponentFillerMatches(missing, size);
-    return {matches: smart.matches.concat(extra), fillerCount: smart.fillerCount, extraOpponentCount: extra.length};
-  } else {
-    const basic = buildMatches(queue);
-    return {matches: basic.matches, fillerCount: basic.fillerCount, extraOpponentCount: 0};
+  const megarounds = circleFactorization(N).map(r=> r.filter(p=> !(BYE && (p[0]===BYE || p[1]===BYE))));
+  const parityMin = (size%4===2 || size%4===3) ? 1 : 0;   // mínimo teórico de parejas sobrantes
+
+  function attempt(rounds){
+    const queue = [];
+    rounds.forEach(r=>r.forEach(p=>queue.push(p)));
+    if(ensureOpponents){
+      const smart = buildMatchesSmart(queue, dropFiller);
+      const missing = computeMissingOpponentPairs(smart.coveredOpponents, size);
+      const extra = buildOpponentFillerMatches(missing, size);
+      return {matches: smart.matches.concat(extra), fillerCount: smart.fillerCount, extraOpponentCount: extra.length, leftover: smart.leftover};
+    }
+    const basic = buildMatches(queue, dropFiller);
+    return {matches: basic.matches, fillerCount: basic.fillerCount, extraOpponentCount: 0, leftover: basic.leftover};
   }
+  const cost = r => (r.fillerCount + r.leftover.length) * 1000 + r.extraOpponentCount;
+  let best = attempt(megarounds);
+  // Búsqueda con varios órdenes (semilla fija: mismo resultado siempre) para minimizar rellenos y partidos extra
+  if(ensureOpponents && (best.extraOpponentCount>0 || best.fillerCount + best.leftover.length > parityMin)){
+    const rnd = seededRng(size*7919 + 17);
+    for(let k=0;k<60;k++){
+      const order = megarounds.map(r=>r.slice());
+      for(let i=order.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+      order.forEach(r=>{ for(let i=r.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [r[i],r[j]]=[r[j],r[i]]; } });
+      const cand = attempt(order);
+      if(cost(cand) < cost(best)) best = cand;
+      if(best.extraOpponentCount===0 && best.fillerCount + best.leftover.length <= parityMin) break;
+    }
+  }
+  return best;
+}
+
+// Todos contra todos entre parejas fijas (size = número de parejas, numeradas 1..size)
+function buildPairGroupMatches(size){
+  const N = size % 2 === 0 ? size : size + 1;
+  const GHOST = size % 2 === 0 ? null : N;
+  const matches = [];
+  circleFactorization(N).forEach(r=>r.forEach(p=>{
+    if(GHOST && (p[0]===GHOST || p[1]===GHOST)) return;
+    matches.push({a:[p[0]], b:[p[1]], filler:false});
+  }));
+  return {matches, fillerCount:0, extraOpponentCount:0, leftover:[]};
 }
 
 // Variante de buildMatches que, en cada paso, elige entre las parejas restantes la que
 // cubra más rivalidades (pareja-vs-pareja) todavía no vistas, para minimizar partidos extra.
-function buildMatchesSmart(queue){
+function buildMatchesSmart(queue, dropFiller){
   const coveredOpponents = new Set();
   const matches = [];
+  const leftover = [];
   let fillerCount = 0;
   const q = queue.slice();
   while(q.length>0){
@@ -432,6 +517,7 @@ function buildMatchesSmart(queue){
       if(newCount>bestNew){ bestNew=newCount; bestIdx=i; if(newCount===4) break; }
     }
     if(bestIdx===-1){
+      if(dropFiller){ leftover.push(p1); continue; }
       let fillerPartner = null;
       outer:
       for(const m of matches){
@@ -448,7 +534,7 @@ function buildMatchesSmart(queue){
       p1.forEach(x=>p2.forEach(y=>coveredOpponents.add(opponentKey(x,y))));
     }
   }
-  return {matches, fillerCount, coveredOpponents};
+  return {matches, fillerCount, coveredOpponents, leftover};
 }
 
 function opponentKey(a,b){ return [Math.min(a,b),Math.max(a,b)].join('-'); }
@@ -499,7 +585,23 @@ function emptyScore(mode){
 }
 
 // Devuelve: complete, error, needsTiebreak, gamesA, gamesB, winner ('A'|'B'|null)
-function computeMatchResult(mode, sc, games){
+// Validez de un set según el formato: 'set' (a 6) o 'short' (a 4). fmt vacío = torneos antiguos (sin validar)
+function setValid(a, b, fmt){
+  const hi = Math.max(a,b), lo = Math.min(a,b);
+  if(fmt === 'short') return hi===4 && lo<=3;                       // 4-0..4-2 y 4-3 (tiebreak a 3-3)
+  return (hi===6 && lo<=4) || (hi===7 && (lo===5 || lo===6));      // 6-0..6-4, 7-5 y 7-6 (tiebreak a 6-6)
+}
+function setIsTiebreak(a, b, fmt){
+  const hi = Math.max(a,b), lo = Math.min(a,b);
+  return fmt === 'short' ? (hi===4 && lo===3) : (hi===7 && lo===6);
+}
+// Puntos del tiebreak del set (opcionales): si se llenan, deben ser coherentes con el set
+function tbPointsValid(sa, sb, ta, tb){
+  const na=Number(ta), nb=Number(tb);
+  if(na===nb || Math.max(na,nb)<7 || Math.abs(na-nb)<2) return false;
+  return (na>nb) === (Number(sa)>Number(sb));
+}
+function computeMatchResult(mode, sc, games, setFormat){
   games = games || 4;
   if(mode === 'americano'){
     if(sc.ga==='' || sc.gb==='') return {complete:false, error:false, needsTiebreak:false};
@@ -508,6 +610,16 @@ function computeMatchResult(mode, sc, games){
     return {complete:true, error:false, needsTiebreak:false, gamesA:a, gamesB:b, winner: a>b?'A':(b>a?'B':null)};
   }
   // regular
+  if(setFormat){
+    for(const k of ['1','2']){
+      const a = sc['s'+k+'a'], b = sc['s'+k+'b'];
+      if(a!=='' && b!=='' && !setValid(Number(a), Number(b), setFormat)) return {complete:false, error:true, badSet:setFormat, needsTiebreak:false};
+      const ta = sc['t'+k+'a'], tb = sc['t'+k+'b'];
+      if(a!=='' && b!=='' && setIsTiebreak(Number(a),Number(b),setFormat) && ta!==undefined && tb!==undefined && ta!=='' && tb!=='' &&
+         !tbPointsValid(a,b,ta,tb))
+        return {complete:false, error:true, badTb:true, needsTiebreak:false};
+    }
+  }
   if(sc.s1a==='' || sc.s1b==='' || sc.s2a==='' || sc.s2b==='') return {complete:false, error:false, needsTiebreak:false};
   const n1a=Number(sc.s1a), n1b=Number(sc.s1b), n2a=Number(sc.s2a), n2b=Number(sc.s2b);
   if(n1a===n1b || n2a===n2b) return {complete:false, error:true, needsTiebreak:false};
@@ -664,11 +776,14 @@ function activeTournament(){
   return app.tournaments[app.activeId];
 }
 
-function makeTournament(name, mode, N, courts, groups, games){
+function makeTournament(name, mode, N, courts, groups, games, setFormat, inscription){
   if(mode === 'draw') return makeDrawTournament(name, N, courts);
   const ensureOpponents = (mode === 'americano');
-  const numGroups = (mode === 'americano' && groups>1) ? groups : 1;
-  const {physRounds, totalMatches, fillerCount, extraOpponentCount, groupSizes} = buildSchedule(N, courts, ensureOpponents, numGroups);
+  const numGroups = (groups>1) ? groups : 1;
+  const pairMode = (mode === 'regular' && inscription === 'pairs');
+  const {physRounds, totalMatches, fillerCount, extraOpponentCount, crossCount, groupSizes} = buildSchedule(N, courts, ensureOpponents, numGroups, pairMode);
+  const pairsCount = pairMode ? N : null;
+  if(pairMode) N = 2*N;   // N = número de jugadores (2 por pareja)
   const players = {};
   for(let i=1;i<=N;i++) players[i] = 'Jugador ' + i;
   const scores = {};
@@ -681,7 +796,8 @@ function makeTournament(name, mode, N, courts, groups, games){
   return {
     id: 't' + Date.now() + Math.floor(Math.random()*1000),
     name: name || 'Torneo',
-    mode, N, courts, gamesPerMatch: (mode==="americano" ? (games===6?6:4) : null), groups: numGroups, groupSizes, players, physRounds, totalMatches, fillerCount, extraOpponentCount, scores
+    mode, N, courts, gamesPerMatch: (mode==="americano" ? (games===6?6:4) : null), setFormat: (mode==="regular" ? (setFormat==="short"?"short":"set") : null), groups: numGroups, groupSizes, players, physRounds, totalMatches, fillerCount, extraOpponentCount, crossCount: crossCount||0,
+    inscription: (mode==='regular' ? (pairMode ? 'pairs' : 'individual') : null), pairsCount, scores
   };
 }
 
@@ -718,15 +834,15 @@ function saveApp(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(app)); }catch(e){}
 }
 
-function createTournament(name, mode, N, courts, groups, games){
+function createTournament(name, mode, N, courts, groups, games, setFormat, inscription){
   if(app.order.length >= MAX_TOURNAMENTS){
     return {ok:false, msg:'Ya tienes ' + MAX_TOURNAMENTS + ' torneos guardados. Borra uno antes de crear otro.'};
   }
-  if(mode === 'americano' && groups>1 && !groupsFeasible(N, groups)){
-    const sizes = splitIntoGroups(N, groups);
-    return {ok:false, msg:'Con ' + N + ' jugadores en ' + groups + ' grupos, algún grupo quedaría con solo ' + Math.min(...sizes) + ' (mínimo 4 por grupo). Elige más jugadores o menos grupos.'};
+  const pairMode = (mode === 'regular' && inscription === 'pairs');
+  if(groups>1 && !groupsFeasible(N, groups, pairMode)){
+    return {ok:false, msg: groupsError(N, groups, pairMode)};
   }
-  const t = makeTournament(name, mode, N, courts, groups, games);
+  const t = makeTournament(name, mode, N, courts, groups, games, setFormat, inscription);
   app.tournaments[t.id] = t;
   app.order.push(t.id);
   app.activeId = t.id;
@@ -751,6 +867,11 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function playerName(t, num){ return t.players[num] || ('Jugador '+num); }
+
+function groupBadgeText(m){
+  const L = i=> String.fromCharCode(65+i);
+  return (m.cross!==undefined && m.cross!==null) ? ('Grupos ' + L(m.group||0) + ' y ' + L(m.cross)) : ('Grupo ' + L(m.group||0));
+}
 
 function groupPlayerRange(t, gi){
   const sizes = t.groupSizes && t.groupSizes.length ? t.groupSizes : [t.N];
@@ -783,9 +904,9 @@ function computeRanking(t, groupIndex){
   t.physRounds.forEach((round, ri)=>{
     round.forEach((m, ci)=>{
       if(!m) return;
-      if(groupIndex!==undefined && (m.group||0)!==groupIndex) return;
+      if(groupIndex!==undefined && (m.group||0)!==groupIndex && m.cross!==groupIndex) return;
       const sc = t.scores[ri+'-'+ci];
-      const res = computeMatchResult(t.mode, sc, gamesOf(t));
+      const res = computeMatchResult(t.mode, sc, gamesOf(t), t.setFormat);
       if(!res.complete) return;
       m.a.forEach(p=>{ if(gf[p]===undefined) return; gf[p]+=res.gamesA; gc[p]+=res.gamesB; pj[p]+=1; });
       m.b.forEach(p=>{ if(gf[p]===undefined) return; gf[p]+=res.gamesB; gc[p]+=res.gamesA; pj[p]+=1; });
@@ -796,14 +917,18 @@ function computeRanking(t, groupIndex){
     const ratio = gc[i]>0 ? gf[i]/gc[i] : (gf[i]>0 ? gf[i] : 0);
     rows.push({num:i, group:groupLetterOf(t,i), name:playerName(t,i), pj:pj[i], gf:gf[i], gc:gc[i], diff:gf[i]-gc[i], ratio});
   });
-  rows.sort((a,b)=> b.ratio-a.ratio || b.diff-a.diff);
-  return rows;
+  let out = rows;
+  if(t.inscription === 'pairs'){
+    out = rows.filter(r=> r.num % 2 === 1).map(r=> Object.assign({}, r, {name: playerName(t,r.num) + ' / ' + playerName(t,r.num+1), isPair:true}));
+  }
+  out.sort((a,b)=> b.ratio-a.ratio || b.diff-a.diff);
+  return out;
 }
 
 /* ============ Render: selector de torneo y lista ============ */
 function modeLabel(t, long){
   if(t.mode==='draw') return 'Draw';
-  if(t.mode==='regular') return 'Regular';
+  if(t.mode==='regular') return long && t.setFormat ? ('Regular · '+(t.setFormat==='short'?'short set':'set a 6')+(t.inscription==='pairs'?' · parejas':'')) : 'Regular';
   return long ? ('Americano · '+gamesOf(t)+' games') : 'Americano';
 }
 
@@ -844,7 +969,7 @@ function renderTournamentList(){
       '<span class="badge ' + t.mode + '">' + modeLabel(t, true) + '</span></div>' +
       '<div class="tmeta">' + (t.mode==='draw'
         ? (t.N + ' parejas &middot; cuadro de ' + t.draw.size + ' &middot; ' + (t.N-1) + ' partidos')
-        : (t.N + ' jugadores &middot; ' + t.courts + ' cancha(s) &middot; ' + t.physRounds.length + ' rondas' +
+        : ((t.inscription==='pairs' ? (t.pairsCount + ' parejas') : (t.N + ' jugadores')) + ' &middot; ' + t.courts + ' cancha(s) &middot; ' + t.physRounds.length + ' rondas' +
            ((t.groups||1)>1 ? ' &middot; ' + t.groups + ' grupos' : ''))) + '</div>' +
       '<div class="tactions">' +
         (id!==app.activeId ? '<button class="secondary tsel-btn" data-id="'+id+'">Seleccionar</button>' : '') +
@@ -871,14 +996,17 @@ function renderTournamentList(){
 let lastCountMode = null;
 function populateCountOptions(mode){
   const sel = document.getElementById('newPlayerCount');
-  const isDraw = (mode==='draw');
-  if(lastCountMode === isDraw) return;
-  lastCountMode = isDraw;
-  const lo = isDraw ? 3 : 8, hi = isDraw ? 16 : 24, def = isDraw ? 8 : 16;
+  const insc = document.getElementById('newInscription').value;
+  const key = mode==='draw' ? 'draw' : ((mode==='regular' && insc==='pairs') ? 'pairs' : 'ind');
+  if(lastCountMode === key) return;
+  lastCountMode = key;
+  const cfg = {draw:[3,16,8], pairs:[4,16,8], ind:[8,24,16]}[key];
+  const unitTxt = key==='ind' ? ' jugadores' : ' parejas';
   let html = '';
-  for(let n=lo;n<=hi;n++) html += '<option value="'+n+'"'+(n===def?' selected':'')+'>'+n+(isDraw?' parejas':' jugadores')+'</option>';
+  for(let n=cfg[0];n<=cfg[1];n++) html += '<option value="'+n+'"'+(n===cfg[2]?' selected':'')+'>'+n+unitTxt+'</option>';
   sel.innerHTML = html;
-  document.getElementById('countLabel').textContent = isDraw ? 'Número de parejas (cuadro desde octavos; si no es potencia de 2, las demás pasan por bye)' : 'Número de inscritos';
+  document.getElementById('countLabel').textContent = key==='draw' ? 'Número de parejas (cuadro desde octavos; si no es potencia de 2, las demás pasan por bye)' :
+    (key==='pairs' ? 'Número de parejas inscritas' : 'Número de inscritos');
 }
 
 function renderNewFormatSummary(){
@@ -887,11 +1015,16 @@ function renderNewFormatSummary(){
   populateCountOptions(mode);
   const N = Number(document.getElementById('newPlayerCount').value);
   const ensureOpponents = (mode === 'americano');
-  const groups = (mode === 'americano') ? Number(document.getElementById('newGroups').value) : 1;
+  const groups = (mode !== 'draw') ? Number(document.getElementById('newGroups').value) : 1;
   const groupsSelect = document.getElementById('newGroups');
   const groupsLabel = document.getElementById('groupsField');
-  groupsSelect.classList.toggle('hidden', mode !== 'americano');
-  groupsLabel.classList.toggle('hidden', mode !== 'americano');
+  groupsSelect.classList.toggle('hidden', mode === 'draw');
+  groupsLabel.classList.toggle('hidden', mode === 'draw');
+  document.getElementById('newSetFormat').classList.toggle('hidden', mode !== 'regular');
+  document.getElementById('setField').classList.toggle('hidden', mode !== 'regular');
+  document.getElementById('newInscription').classList.toggle('hidden', mode !== 'regular');
+  document.getElementById('inscField').classList.toggle('hidden', mode !== 'regular');
+  const pairMode = (mode === 'regular' && document.getElementById('newInscription').value === 'pairs');
   document.getElementById('newGames').classList.toggle('hidden', mode !== 'americano');
   document.getElementById('gamesField').classList.toggle('hidden', mode !== 'americano');
 
@@ -907,24 +1040,29 @@ function renderNewFormatSummary(){
     return;
   }
 
-  if(mode === 'americano' && groups>1 && !groupsFeasible(N, groups)){
-    const sizes = splitIntoGroups(N, groups);
-    document.getElementById('newFormatSummary').innerHTML =
-      '<span style="color:#D85A30;">Con ' + N + ' jugadores en ' + groups + ' grupos, un grupo quedaría con solo ' +
-      Math.min(...sizes) + ' jugador(es) (mínimo 4 por grupo). Elige más jugadores o menos grupos.</span>';
+  if(groups>1 && !groupsFeasible(N, groups, pairMode)){
+    document.getElementById('newFormatSummary').innerHTML = '<span style="color:#D85A30;">' + groupsError(N, groups, pairMode) + '</span>';
     return;
   }
 
   const minutesPerRound = (mode==='americano' && Number(document.getElementById('newGames').value)===6) ? 35 : 25;
-  const {totalMatches, fillerCount, extraOpponentCount, physRounds, groupSizes} = buildSchedule(N, courts, ensureOpponents, groups);
+  const {totalMatches, fillerCount, extraOpponentCount, crossCount, physRounds, groupSizes} = buildSchedule(N, courts, ensureOpponents, groups, pairMode);
   const rounds = physRounds.length;
   const totalMin = rounds*minutesPerRound;
   const h = Math.floor(totalMin/60), m = totalMin%60;
   let html =
-    N + ' jugadores, ' + courts + ' cancha(s) &rarr; ' + totalMatches + ' partidos &middot; ' + rounds + ' rondas &middot; ' +
+    (pairMode ? (N + ' parejas (' + (2*N) + ' jugadores)') : (N + ' jugadores')) + ', ' + courts + ' cancha(s) &rarr; ' + totalMatches + ' partidos &middot; ' + rounds + ' rondas &middot; ' +
     '&asymp; ' + h + 'h' + (m? ' '+m+'min':'') + ' de juego';
+  if(mode==='regular'){
+    html += '<br>' + (document.getElementById('newSetFormat').value==='short'
+      ? 'Short set a 4 games: tiebreak si empatan 3-3 (se anota 4-3). Si hay 1 set cada uno, super tiebreak a 10.'
+      : 'Set a 6 games: tiebreak si empatan 6-6 (se anota 7-6). Si hay 1 set cada uno, super tiebreak a 10.');
+  }
   if(groups>1){
-    html += '<br>Grupos: ' + groupSizes.map((s,i)=>'Grupo '+String.fromCharCode(65+i)+' ('+s+')').join(', ');
+    html += '<br>Grupos: ' + groupSizes.map((s,i)=>'Grupo '+String.fromCharCode(65+i)+' ('+(pairMode ? (s/2)+' parejas' : s)+')').join(', ');
+  }
+  if(crossCount>0){
+    html += '<br>Incluye ' + crossCount + ' partido(s) entre grupos que evitan repetir parejas como relleno.';
   }
   if(fillerCount>0){
     html += '<br>Incluye ' + fillerCount + ' partido(s) de relleno (repetición) por número impar de parejas.';
@@ -1016,7 +1154,7 @@ function renderPlayersGrid(){
     const wrap = document.createElement('div');
     const label = document.createElement('span');
     label.className='pn';
-    label.textContent = 'Jugador '+i;
+    label.textContent = t.inscription==='pairs' ? ('Pareja '+Math.ceil(i/2)+' · jugador '+(i%2?'1':'2')) : ('Jugador '+i);
     const input = document.createElement('input');
     input.type='text'; input.value = t.players[i]; input.dataset.num = i;
     input.disabled = false;
@@ -1030,6 +1168,15 @@ function renderPlayersGrid(){
 
   if(numGroups<=1){
     for(let i=1;i<=t.N;i++) grid.appendChild(buildInput(i));
+  } else if(t.inscription==='pairs'){
+    for(let gi=0; gi<numGroups; gi++){
+      const {start, end} = groupPlayerRange(t, gi);
+      const heading = document.createElement('div');
+      heading.style.cssText = 'grid-column:1 / -1;font-weight:700;font-size:12.5px;color:var(--navy);margin-top:8px;';
+      heading.textContent = 'Grupo ' + String.fromCharCode(65+gi) + ' (' + ((end-start+1)/2) + ' parejas)';
+      grid.appendChild(heading);
+      for(let i=start; i<=end; i++) grid.appendChild(buildInput(i));
+    }
   } else {
     for(let gi=0; gi<numGroups; gi++){
       const {start, end} = groupPlayerRange(t, gi);
@@ -1072,6 +1219,9 @@ function renderMetrics(){
 
   const banner = document.getElementById('fillerBanner');
   const notes = [];
+  if(t.crossCount>0){
+    notes.push('Incluye ' + t.crossCount + ' partido(s) entre grupos (etiqueta "Grupos A y B"): enfrentan a las parejas que sobraban de dos grupos, en lugar de repetir una pareja como relleno. Cuentan para el ranking de cada grupo y para el general.');
+  }
   if(t.fillerCount>0){
     notes.push('Incluye ' + t.fillerCount + ' partido(s) marcados como "Relleno": con ' + t.N + ' jugadores el número de parejas necesarias es impar, así que una pareja repite partido para completar cancha.');
   }
@@ -1088,12 +1238,14 @@ function renderMetrics(){
 
 function matchStatusLabel(res){
   if(res.complete) return {cls:'ok', text:'Registrado'};
+  if(res.badSet) return {cls:'err', text: res.badSet==='short' ? 'Set inválido: usa 4-0, 4-1, 4-2 o 4-3 (tiebreak)' : 'Set inválido: usa 6-0 a 6-4, 7-5 o 7-6 (tiebreak)'};
+  if(res.badTb) return {cls:'err', text:'Tiebreak inválido (mín. 7 puntos, diferencia de 2, ganador del set)'};
   if(res.error) return {cls:'err', text: res.needsTiebreak ? 'Super tiebreak inválido (min. 10, sin empate)' : (res.games ? 'Marcador inválido: debe sumar '+res.games+' games' : 'Marcador inválido')};
   if(res.needsTiebreak) return {cls:'pending', text:'Falta super tiebreak (1 set cada uno)'};
   return {cls:'pending', text:'Pendiente'};
 }
 
-function scoreInputsHtml(mode, ri, ci, sc, readOnly, games){
+function scoreInputsHtml(mode, ri, ci, sc, readOnly, games, setFormat){
   games = games || 4;
   const dis = readOnly ? 'disabled' : '';
   if(mode === 'americano'){
@@ -1105,22 +1257,22 @@ function scoreInputsHtml(mode, ri, ci, sc, readOnly, games){
       '<input type="number" min="0" max="'+games+'" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="gb" value="'+sc.gb+'"></div>'
     );
   }
-  const res = computeMatchResult(mode, sc);
+  const res = computeMatchResult(mode, sc, games, setFormat);
   const showTB = res.needsTiebreak;
+  const maxSet = setFormat==='short' ? 4 : 7;
+  const inp = (side, max)=> '<input type="number" min="0" max="'+max+'" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="'+side+'" value="'+(sc[side]===undefined?'':sc[side])+'">';
+  const setRow = (k)=>{
+    let h = '<div class="set-row"><span>Set '+k+'</span>' + inp('s'+k+'a', maxSet) + '<span>-</span>' + inp('s'+k+'b', maxSet) + '</div>';
+    const a = sc['s'+k+'a'], b = sc['s'+k+'b'];
+    if(setFormat && a!=='' && b!=='' && setIsTiebreak(Number(a), Number(b), setFormat)){
+      h += '<div class="set-row tb"><span>Tiebreak set '+k+' (opcional)</span>' + inp('t'+k+'a', 30) + '<span>-</span>' + inp('t'+k+'b', 30) + '</div>';
+    }
+    return h;
+  };
   return (
-    '<div class="set-row"><span>Set 1</span>' +
-    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s1a" value="'+sc.s1a+'">' +
-    '<span>-</span>' +
-    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s1b" value="'+sc.s1b+'"></div>' +
-    '<div class="set-row"><span>Set 2</span>' +
-    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s2a" value="'+sc.s2a+'">' +
-    '<span>-</span>' +
-    '<input type="number" min="0" max="7" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s2b" value="'+sc.s2b+'"></div>' +
+    setRow(1) + setRow(2) +
     (showTB ?
-      '<div class="set-row tb"><span>Super TB</span>' +
-      '<input type="number" min="0" max="30" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s3a" value="'+sc.s3a+'">' +
-      '<span>-</span>' +
-      '<input type="number" min="0" max="30" '+dis+' class="score-input" data-round="'+ri+'" data-court="'+ci+'" data-side="s3b" value="'+sc.s3b+'"></div>'
+      '<div class="set-row tb"><span>Super TB</span>' + inp('s3a', 30) + '<span>-</span>' + inp('s3b', 30) + '</div>'
       : '')
   );
 }
@@ -1200,17 +1352,17 @@ function renderCalendario(){
       if(!m) return;
       const key = ri+'-'+ci;
       const sc = t.scores[key];
-      const res = computeMatchResult(t.mode, sc, gamesOf(t));
+      const res = computeMatchResult(t.mode, sc, gamesOf(t), t.setFormat);
       const st = matchStatusLabel(res);
       const mdiv = document.createElement('div');
       mdiv.className='match';
       const nameA = escapeHtml(playerName(t,m.a[0])) + ' / ' + escapeHtml(playerName(t,m.a[1]));
       const nameB = escapeHtml(playerName(t,m.b[0])) + ' / ' + escapeHtml(playerName(t,m.b[1]));
-      let inputsHtml = scoreInputsHtml(t.mode, ri, ci, sc, readOnly, gamesOf(t));
+      let inputsHtml = scoreInputsHtml(t.mode, ri, ci, sc, readOnly, gamesOf(t), t.setFormat);
       inputsHtml = inputsHtml.replace('__A__', nameA).replace('__B__', nameB);
       mdiv.innerHTML =
         '<span class="court">Cancha '+(ci+1)+'</span>' +
-        ((t.groups||1)>1 ? '<span class="badge americano" style="margin-left:0;">Grupo '+String.fromCharCode(65+(m.group||0))+'</span>' : '') +
+        ((t.groups||1)>1 ? '<span class="badge americano" style="margin-left:0;">'+groupBadgeText(m)+'</span>' : '') +
         (m.filler? '<span class="filler">Relleno</span>':'') +
         (m.extraOpponent? '<span class="filler" style="background:#E4EEFB;color:#1F5FA8;">Extra rival</span>':'') +
         (t.mode==='regular' ? ('<div class="pair-line"><b>'+nameA+'</b></div><div class="vs">vs</div><div class="pair-line"><b>'+nameB+'</b></div>') : '') +
@@ -1245,7 +1397,7 @@ function rankTableHtml(rows, heading, showGroup){
   if(heading) html += '<h2>'+escapeHtml(heading)+'</h2>';
   else html += '<h2>Clasificación individual</h2>';
   html +=
-    '<table class="rank"><thead><tr><th>#</th><th>Jugador</th>' + (showGroup?'<th>Gr.</th>':'') + '<th style="text-align:right">PJ</th>' +
+    '<table class="rank"><thead><tr><th>#</th><th>'+(rows[0]&&rows[0].isPair?'Pareja':'Jugador')+'</th>' + (showGroup?'<th>Gr.</th>':'') + '<th style="text-align:right">PJ</th>' +
     '<th style="text-align:right">GF</th><th style="text-align:right">GC</th><th style="text-align:right">Dif</th>' +
     '<th style="text-align:right">GF/GC</th></tr></thead><tbody>';
   rows.forEach((r, idx)=>{
@@ -1330,15 +1482,19 @@ document.getElementById('newCourtCount').addEventListener('change', renderNewFor
 document.getElementById('newMode').addEventListener('change', renderNewFormatSummary);
 document.getElementById('newGroups').addEventListener('change', renderNewFormatSummary);
 document.getElementById('newGames').addEventListener('change', renderNewFormatSummary);
+document.getElementById('newSetFormat').addEventListener('change', renderNewFormatSummary);
+document.getElementById('newInscription').addEventListener('change', renderNewFormatSummary);
 
 document.getElementById('btnCreateTournament').addEventListener('click', ()=>{
   const name = document.getElementById('newTournamentName').value.trim() || ('Torneo ' + (app.order.length+1));
   const mode = document.getElementById('newMode').value;
   const N = Number(document.getElementById('newPlayerCount').value);
   const courts = Number(document.getElementById('newCourtCount').value);
-  const groups = (mode === 'americano') ? Number(document.getElementById('newGroups').value) : 1;
+  const groups = (mode !== 'draw') ? Number(document.getElementById('newGroups').value) : 1;
   const games = Number(document.getElementById('newGames').value);
-  const result = createTournament(name, mode, N, courts, groups, games);
+  const setFormat = document.getElementById('newSetFormat').value;
+  const inscription = document.getElementById('newInscription').value;
+  const result = createTournament(name, mode, N, courts, groups, games, setFormat, inscription);
   const statusEl = document.getElementById('createStatus');
   if(!result.ok){
     statusEl.textContent = result.msg;
@@ -1468,8 +1624,9 @@ function scoreTextForPdf(mode, sc, res){
   if(mode === 'americano'){
     return res.complete ? (sc.ga + ' - ' + sc.gb) : '___ - ___';
   }
-  const s1 = (sc.s1a!=='' && sc.s1b!=='') ? (sc.s1a+'-'+sc.s1b) : '__-__';
-  const s2 = (sc.s2a!=='' && sc.s2b!=='') ? (sc.s2a+'-'+sc.s2b) : '__-__';
+  const tbTxt = (k)=> (sc['t'+k+'a'] && sc['t'+k+'b'] && sc['t'+k+'a']!=='' && sc['t'+k+'b']!=='') ? ('('+sc['t'+k+'a']+'-'+sc['t'+k+'b']+')') : '';
+  const s1 = (sc.s1a!=='' && sc.s1b!=='') ? (sc.s1a+'-'+sc.s1b+tbTxt('1')) : '__-__';
+  const s2 = (sc.s2a!=='' && sc.s2b!=='') ? (sc.s2a+'-'+sc.s2b+tbTxt('2')) : '__-__';
   let out = s1 + ' / ' + s2;
   if(res.needsTiebreak){
     const s3 = (sc.s3a!=='' && sc.s3b!=='') ? (sc.s3a+'-'+sc.s3b) : '__-__';
@@ -1515,11 +1672,11 @@ document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
     round.forEach((m, ci)=>{
       if(!m) return;
       const sc = t.scores[ri+'-'+ci];
-      const res = computeMatchResult(t.mode, sc, gamesOf(t));
+      const res = computeMatchResult(t.mode, sc, gamesOf(t), t.setFormat);
       const scoreText = scoreTextForPdf(t.mode, sc, res);
       roundsHtml +=
         '<div class="pr-match"><span class="pr-court">Cancha ' + (ci+1) + '</span>' +
-        ((t.groups||1)>1 ? '<span class="pr-court" style="color:#1F5FA8;">Grupo ' + String.fromCharCode(65+(m.group||0)) + '</span>' : '') +
+        ((t.groups||1)>1 ? '<span class="pr-court" style="color:#1F5FA8;">' + groupBadgeText(m) + '</span>' : '') +
         (m.filler ? '<span class="pr-filler">(Relleno)</span>' : '') +
         (m.extraOpponent ? '<span class="pr-filler" style="color:#1F5FA8;">(Extra rival)</span>' : '') +
         '<span class="pr-score">' + scoreText + '</span><br>' +
@@ -1557,7 +1714,7 @@ document.getElementById('btnPdfRanking').addEventListener('click', ()=>{
       '<td class="num">' + r.pj + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.gc + '</td>' +
       '<td class="num">' + (r.diff>0?'+':'') + r.diff + '</td><td class="num">' + r.ratio.toFixed(2) + '</td></tr>'
     ).join('');
-    return '<table><thead><tr><th>#</th><th>Jugador</th>' + (showGroup ? '<th>Gr.</th>' : '') + '<th class="num">PJ</th><th class="num">GF</th>' +
+    return '<table><thead><tr><th>#</th><th>' + (rows[0]&&rows[0].isPair?'Pareja':'Jugador') + '</th>' + (showGroup ? '<th>Gr.</th>' : '') + '<th class="num">PJ</th><th class="num">GF</th>' +
       '<th class="num">GC</th><th class="num">Dif</th><th class="num">GF/GC</th></tr></thead>' +
       '<tbody>' + trs + '</tbody></table>';
   };
