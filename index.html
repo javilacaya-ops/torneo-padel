@@ -127,7 +127,7 @@
 
   <div class="topbar">
     <h1>Control de torneo de pádel</h1>
-    <div class="sub">8-24 jugadores · 2-4 canchas · americano, regular o draw</div>
+    <div class="sub">8-30 jugadores · 2-4 canchas · americano, regular o draw</div>
     <div class="stripe"></div>
   </div>
 
@@ -1000,7 +1000,7 @@ function populateCountOptions(mode){
   const key = mode==='draw' ? 'draw' : ((mode==='regular' && insc==='pairs') ? 'pairs' : 'ind');
   if(lastCountMode === key) return;
   lastCountMode = key;
-  const cfg = {draw:[3,16,8], pairs:[4,16,8], ind:[8,24,16]}[key];
+  const cfg = {draw:[3,16,8], pairs:[4,16,8], ind:[8,30,16]}[key];
   const unitTxt = key==='ind' ? ' jugadores' : ' parejas';
   let html = '';
   for(let n=cfg[0];n<=cfg[1];n++) html += '<option value="'+n+'"'+(n===cfg[2]?' selected':'')+'>'+n+unitTxt+'</option>';
