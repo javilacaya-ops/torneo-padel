@@ -1,4 +1,4 @@
-const CACHE_NAME = 'torneo-padel-v18';
+const CACHE_NAME = 'torneo-padel-v19';
 const STATIC_ASSETS = [
   './manifest.json',
   './icon-192.png',
