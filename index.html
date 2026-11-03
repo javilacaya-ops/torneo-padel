@@ -33,32 +33,32 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;}
   .app{max-width:480px;margin:0 auto;padding:14px 12px 60px;}
   .topbar{background:var(--navy);color:#fff;border-radius:14px;padding:16px 16px 14px;margin-bottom:14px;}
-  .topbar h1{margin:0 0 2px;font-size:17px;font-weight:700;letter-spacing:.2px;}
-  .topbar .sub{font-size:12px;color:#C9CDD6;}
+  .topbar h1{margin:0 0 2px;font-size:20.5px;font-weight:700;letter-spacing:.2px;}
+  .topbar .sub{font-size:14.5px;color:#C9CDD6;}
   .stripe{height:4px;background:var(--gold);border-radius:2px;margin-top:10px;}
 
   .tsel{margin-bottom:12px;}
   .tsel select{width:100%;}
 
-  .tabs{display:flex;gap:6px;margin-bottom:12px;}
-  .tab{flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-size:12.5px;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--muted);}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .tab{flex:1 1 30%;text-align:center;padding:9px 4px;border-radius:10px;font-size:15px;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--muted);}
   .tab.active{background:var(--navy);color:var(--gold);border-color:var(--navy);}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
-  .card h2{font-size:14px;margin:0 0 10px;color:var(--navy);}
+  .card h2{font-size:17px;margin:0 0 10px;color:var(--navy);}
   .row{display:flex;gap:8px;align-items:center;}
   .row + .row{margin-top:8px;}
 
   select, input[type=text], input[type=number], input[type=password]{
-    font-family:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:14px;background:#fff;color:var(--text);
+    font-family:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:17px;background:#fff;color:var(--text);
   }
   select{width:100%;}
   input[type=text], input[type=password]{width:100%;}
 
   .players-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .players-grid .pn{font-size:11px;color:var(--muted);margin-bottom:2px;display:block;}
+  .players-grid .pn{font-size:13px;color:var(--muted);margin-bottom:2px;display:block;}
 
-  button{font-family:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:10px 12px;font-size:13.5px;font-weight:600;}
+  button{font-family:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:10px 12px;font-size:16px;font-weight:600;}
   button.secondary{background:#fff;color:var(--navy);}
   button.danger{background:#fff;color:var(--err);border-color:var(--err);}
   button:disabled{opacity:.4;cursor:not-allowed;}
@@ -68,56 +68,61 @@
 
   .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
   .metric{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
-  .metric .lbl{font-size:11px;color:var(--muted);}
-  .metric .val{font-size:19px;font-weight:700;color:var(--navy);}
+  .metric .lbl{font-size:13px;color:var(--muted);}
+  .metric .val{font-size:23px;font-weight:700;color:var(--navy);}
 
   .round{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
   .round-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .round-head .rn{font-weight:700;font-size:13px;color:var(--navy);}
-  .round-head .rt{font-size:11px;color:var(--muted);}
+  .round-head .rn{font-weight:700;font-size:15.5px;color:var(--navy);}
+  .round-head .rt{font-size:13px;color:var(--muted);}
   .match{border-top:1px dashed var(--line);padding-top:8px;margin-top:8px;}
   .match:first-child{border-top:none;padding-top:0;margin-top:0;}
-  .match .court{display:inline-block;font-size:10px;font-weight:700;color:var(--gold-dark);background:#FFF8DA;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
-  .match .filler{display:inline-block;font-size:10px;font-weight:700;color:var(--err);background:#FBE7E0;border-radius:6px;padding:2px 7px;margin-left:6px;}
-  .pair-line{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;}
+  .match .court{display:inline-block;font-size:12px;font-weight:700;color:var(--gold-dark);background:#FFF8DA;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
+  .match .filler{display:inline-block;font-size:12px;font-weight:700;color:var(--err);background:#FBE7E0;border-radius:6px;padding:2px 7px;margin-left:6px;}
+  .pair-line{display:flex;justify-content:space-between;align-items:center;font-size:15.5px;padding:3px 0;}
   .pair-names{flex:1;}
-  .score-input{width:44px;height:32px;text-align:center;font-size:14px;}
-  .vs{font-size:11px;color:var(--muted);text-align:center;margin:1px 0;}
-  .status{font-size:10.5px;text-align:right;margin-top:4px;}
+  .score-input{width:54px;height:38px;text-align:center;font-size:17px;}
+  .vs{font-size:13px;color:var(--muted);text-align:center;margin:1px 0;}
+  .status{font-size:12.5px;text-align:right;margin-top:4px;}
   .status.ok{color:var(--ok);}
   .status.err{color:var(--err);}
   .status.pending{color:var(--muted);}
 
-  .set-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);margin:4px 0;}
-  .set-row span:first-child{width:64px;}
-  .set-row .score-input{width:38px;height:28px;}
+  table.qt{width:100%;border-collapse:collapse;font-size:15px;margin-top:6px;}
+  table.qt th{text-align:left;font-size:12.5px;color:var(--muted);font-weight:600;padding:5px 4px;border-bottom:1px solid var(--line);}
+  table.qt td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .qsum{font-size:14.5px;color:var(--muted);margin:2px 0 4px;}
+  .qwin{color:var(--ok);font-weight:700;} .qlose{color:var(--err);font-weight:700;}
+  .set-row{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);margin:4px 0;}
+  .set-row span:first-child{width:92px;}
+  .set-row .score-input{width:48px;height:36px;}
   .set-row.tb{color:var(--gold-dark);font-weight:600;}
 
-  table.rank{width:100%;border-collapse:collapse;font-size:12.5px;}
-  table.rank th{text-align:left;font-size:10.5px;color:var(--muted);font-weight:600;padding:5px 4px;border-bottom:1px solid var(--line);}
+  table.rank{width:100%;border-collapse:collapse;font-size:15px;}
+  table.rank th{text-align:left;font-size:12.5px;color:var(--muted);font-weight:600;padding:5px 4px;border-bottom:1px solid var(--line);}
   table.rank td{padding:6px 4px;border-bottom:1px solid var(--line);}
   table.rank td.num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pos{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#EEE;color:#555;}
+  .pos{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#EEE;color:#555;}
   .pos.p1{background:var(--gold);color:var(--navy-2);}
   .pos.p2{background:#D9DCE3;color:var(--navy-2);}
   .pos.p3{background:#E7C7A3;color:#5A3A17;}
 
-  .note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:2px;}
+  .note{font-size:14px;color:var(--muted);line-height:1.5;margin-top:2px;}
   .hidden{display:none;}
-  .banner{background:#FFF8DA;border:1px solid var(--gold-dark);border-radius:10px;padding:9px 11px;font-size:11.5px;color:#5A4A05;margin-bottom:12px;}
-  .sync-box{width:100%;min-height:90px;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:monospace;font-size:11px;color:var(--text);resize:vertical;word-break:break-all;}
+  .banner{background:#FFF8DA;border:1px solid var(--gold-dark);border-radius:10px;padding:9px 11px;font-size:14px;color:#5A4A05;margin-bottom:12px;}
+  .sync-box{width:100%;min-height:90px;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:monospace;font-size:13px;color:var(--text);resize:vertical;word-break:break-all;}
 
   .tlist-item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;}
   .tlist-item.active{border-color:var(--gold-dark);background:#FFFBEC;}
-  .tlist-item .tname{font-weight:700;font-size:13.5px;color:var(--navy);}
-  .tlist-item .tmeta{font-size:11px;color:var(--muted);margin:2px 0 8px;}
+  .tlist-item .tname{font-weight:700;font-size:16px;color:var(--navy);}
+  .tlist-item .tmeta{font-size:13px;color:var(--muted);margin:2px 0 8px;}
   .tlist-item .tactions{display:flex;gap:6px;}
-  .tlist-item .tactions button{flex:1;padding:7px;font-size:12px;}
-  .badge{display:inline-block;font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;margin-left:6px;}
+  .tlist-item .tactions button{flex:1;padding:7px;font-size:14.5px;}
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;border-radius:5px;padding:2px 6px;margin-left:6px;}
   .badge.americano{background:#E4EEFB;color:#1F5FA8;}
   .badge.regular{background:#EAF7EE;color:#1D8A4E;}
   .badge.draw{background:#FBEFD9;color:#9A6A00;}
-  .draw-slot{grid-column:1 / -1;display:flex;gap:6px;align-items:center;font-size:12px;}
+  .draw-slot{grid-column:1 / -1;display:flex;gap:6px;align-items:center;font-size:14.5px;}
   .draw-slot select{flex:1;min-width:0;}
 </style>
 </head>
@@ -140,6 +145,7 @@
     <div class="tab active" data-tab="config">Torneos</div>
     <div class="tab" data-tab="calendario">Calendario</div>
     <div class="tab" data-tab="ranking">Ranking</div>
+    <div class="tab" data-tab="consultas">Consultas</div>
     <div class="tab" data-tab="sync">Sincronizar</div>
   </div>
 
@@ -158,6 +164,12 @@
         <option value="americano">Americano (games fijos por partido)</option>
         <option value="regular">Regular (2 sets + super tiebreak a 10)</option>
         <option value="draw">Draw con eliminación directa (desde octavos)</option>
+      </select>
+      <div class="note" id="drawFmtField" style="margin-top:10px;">Formato de los partidos (solo draw)</div>
+      <select id="newDrawFormat">
+        <option value="sets2" selected>2 sets + super tiebreak a 10 si hay 1-1</option>
+        <option value="one">1 set (si empatan 5-5 se juega hasta 7-5)</option>
+        <option value="short">1 short set (si empatan 3-3 se juega hasta 5-3)</option>
       </select>
       <div class="note" id="inscField" style="margin-top:10px;">Inscripción (solo regular)</div>
       <select id="newInscription">
@@ -239,6 +251,25 @@
         <button class="secondary" id="btnPdfRanking" type="button">Descargar PDF de ranking</button>
       </div>
     </div>
+  </div>
+
+  <div id="tab-consultas" class="hidden">
+    <div class="card">
+      <h2>Consultas</h2>
+      <div class="note">Tipo de consulta</div>
+      <select id="qType">
+        <option value="pend-jug">Partidos pendientes por jugador</option>
+        <option value="pend-par">Partidos pendientes por pareja</option>
+        <option value="res-jug">Resultados por jugador</option>
+        <option value="res-par">Resultados por pareja</option>
+      </select>
+      <div class="note" id="qEntLabel" style="margin-top:10px;">Jugador</div>
+      <select id="qEntity"></select>
+      <div class="actions">
+        <button class="secondary" id="btnPdfQuery" type="button">Descargar PDF de esta consulta</button>
+      </div>
+    </div>
+    <div id="queryResult"></div>
   </div>
 
   <div id="tab-sync" class="hidden">
@@ -643,6 +674,63 @@ function computeMatchResult(mode, sc, games, setFormat){
 }
 
 
+
+/* ============ Estilos del cuadro (draw) y de la ventana de score ============ */
+const BRACKET_CSS = `
+  .bracket-wrap{overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;}
+  .bracket{display:flex;align-items:stretch;min-width:max-content;padding:4px 2px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;}
+  .b-col{width:240px;flex:none;margin-right:40px;display:flex;flex-direction:column;}
+  .b-col:last-child{margin-right:0;}
+  .b-title{font-size:17px;font-weight:700;color:#1F2937;text-align:center;text-transform:uppercase;letter-spacing:.4px;padding:4px 0 8px;}
+  .b-slots{display:flex;flex-direction:column;height:calc(var(--n0) * 150px);}
+  .b-slot{flex:1 1 0;display:flex;align-items:center;position:relative;}
+  .b-slot i{position:absolute;pointer-events:none;display:block;}
+  .ln-out{left:100%;width:20px;top:50%;border-top:2px solid #9CA3AF;}
+  .ln-in{left:-20px;width:20px;top:50%;border-top:2px solid #9CA3AF;}
+  .ln-v{left:calc(100% + 20px);width:0;border-left:2px solid #9CA3AF;}
+  .b-slot.top .ln-v{top:50%;bottom:0;}
+  .b-slot.bot .ln-v{top:0;bottom:50%;}
+  .b-match{width:100%;background:#fff;border:1px solid #D1D5DB;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);overflow:hidden;}
+  .b-match.clickable{cursor:pointer;border-color:#B8960B;}
+  .b-match.bye{opacity:.75;}
+  .b-num{font-size:13px;color:#6B7280;background:#F3F4F6;padding:2px 8px;font-weight:600;}
+  .b-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;font-size:17px;border-top:1px solid #EEEDE6;}
+  .b-row.win{font-weight:700;background:#FFF8DA;}
+  .b-row.lose{color:#6B7280;}
+  .b-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .b-sc{display:flex;gap:4px;margin-left:6px;}
+  .b-set{min-width:20px;text-align:center;font-variant-numeric:tabular-nums;}
+  .b-set.w{font-weight:800;color:#111827;}
+  .b-set.stb{border:1px dashed #9CA3AF;border-radius:4px;padding:0 3px;}
+  .b-set sup{font-size:11px;}
+  .b-tbd{color:#9CA3AF;font-style:italic;font-weight:400;}
+  .b-foot{font-size:13px;padding:3px 8px;color:#6B7280;background:#FAFAF7;}
+  .b-foot.ok{color:#1D9E75;} .b-foot.err{color:#D85A30;}
+  .b-champ{width:100%;border:2px solid #F8CF18;background:#FFFBEC;border-radius:10px;padding:12px 10px;text-align:center;font-weight:800;font-size:19px;}
+`;
+const MODAL_CSS = `
+  .modal-back{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(17,24,39,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .modal{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:420px;max-height:92vh;overflow:auto;}
+  .m-title{font-size:15.5px;font-weight:700;color:#B8960B;text-transform:uppercase;letter-spacing:.4px;}
+  .m-teams{font-size:18px;margin:4px 0 10px;line-height:1.35;}
+  .m-head{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#1F2937;margin-bottom:4px;padding-left:96px;gap:8px;}
+  .m-head span{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .m-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:15.5px;}
+  .m-row .m-lbl{width:88px;color:#6B7280;font-size:14.5px;}
+  .m-row.tb .m-lbl{color:#B8960B;font-weight:600;}
+  .m-row .score-input{flex:1;height:40px;font-size:21.5px;}
+  .m-row2{display:flex;align-items:center;gap:8px;margin:8px 0;}
+  .m-row2 .m-name{flex:1;font-size:17px;font-weight:600;}
+  .m-row2 .score-input{width:80px;height:42px;font-size:24px;}
+  .m-msg{font-size:15px;color:#6B7280;margin-top:8px;min-height:18px;}
+  .m-msg .ok{color:#1D9E75;font-weight:700;} .m-msg .err{color:#D85A30;font-weight:700;}
+`;
+(function injectStyles(){
+  const st = document.createElement('style');
+  st.textContent = BRACKET_CSS + MODAL_CSS;
+  document.head.appendChild(st);
+})();
+
 /* ============ Draw con eliminación directa ============ */
 function seedOrder(S){
   let o = [1,2];
@@ -663,8 +751,69 @@ function slotsValid(slots){
 function drawRoundName(matches){
   return ({1:'Final',2:'Semifinales',4:'Cuartos de final',8:'Octavos de final'})[matches] || ('Ronda de '+matches*2);
 }
+function drawFormatOf(t){ return (t && t.drawFormat) ? t.drawFormat : 'points'; }   // 'points' = torneos anteriores
+function drawFormatLabel(fmt){
+  return ({sets2:'2 sets + super tiebreak a 10 si hay 1-1', one:'1 set (si empatan 5-5 se juega hasta 7-5)', short:'1 short set (si empatan 3-3 se juega hasta 5-3)', points:'score libre (gana el más alto)'})[fmt] || '';
+}
+function drawEmptyScore(fmt){
+  return fmt==='sets2' ? {s1a:'',s1b:'',s2a:'',s2b:'',s3a:'',s3b:'',t1a:'',t1b:'',t2a:'',t2b:''} : {a:'',b:''};
+}
+function drawMatchMinutes(t){ return ({sets2:70, one:45, short:30, points:45})[drawFormatOf(t)] || 45; }
+function oneSetValid(a, b, fmt){
+  const hi = Math.max(a,b), lo = Math.min(a,b);
+  if(fmt==='short') return (hi===4 && lo<=2) || (hi===5 && lo===3);
+  return (hi===6 && lo<=4) || (hi===7 && lo===5);
+}
+// Resultado de un partido del draw según el formato elegido: winner 'A' | 'B' | null
+function drawMatchResult(t, sc){
+  const fmt = drawFormatOf(t);
+  if(!sc) return {complete:false, error:false, winner:null};
+  if(fmt==='sets2'){
+    const res = computeMatchResult('regular', sc, null, 'set');
+    return {complete:res.complete, error:!!res.error, needsTb:!!res.needsTiebreak, winner:res.winner||null,
+            gamesA:res.gamesA, gamesB:res.gamesB, msg: matchStatusLabel(res).text};
+  }
+  if(sc.a==='' || sc.b==='' || sc.a===undefined || sc.b===undefined) return {complete:false, error:false, winner:null};
+  const a = Number(sc.a), b = Number(sc.b);
+  if(fmt==='points'){
+    if(a===b) return {complete:false, error:true, winner:null, msg:'Empate no permitido: debe haber un ganador'};
+    return {complete:true, error:false, winner:a>b?'A':'B', gamesA:a, gamesB:b};
+  }
+  if(!oneSetValid(a,b,fmt)){
+    return {complete:false, error:true, winner:null,
+            msg: fmt==='short' ? 'Short set inválido: usa 4-0, 4-1, 4-2 o 5-3' : 'Set inválido: usa 6-0 a 6-4 o 7-5'};
+  }
+  return {complete:true, error:false, winner:a>b?'A':'B', gamesA:a, gamesB:b};
+}
+// Celdas de sets [{a, b, supA, supB, stb}] a partir de un score de 2 sets + super tiebreak
+function setsFromScore(sc, tbFmt){
+  const cells = [];
+  [1,2].forEach(k=>{
+    const a = sc['s'+k+'a'], b = sc['s'+k+'b'];
+    if(a!==undefined && b!==undefined && a!=='' && b!==''){
+      const c = {a, b};
+      const ta = sc['t'+k+'a'], tb = sc['t'+k+'b'];
+      if(ta!=='' && tb!=='' && ta!==undefined && tb!==undefined && setIsTiebreak(Number(a),Number(b),tbFmt)){
+        const loserPts = Math.min(Number(ta), Number(tb));
+        if(Number(a)<Number(b)) c.supA = loserPts; else c.supB = loserPts;
+      }
+      cells.push(c);
+    }
+  });
+  if(sc.s3a!==undefined && sc.s3b!==undefined && sc.s3a!=='' && sc.s3b!=='') cells.push({a:sc.s3a, b:sc.s3b, stb:true});
+  return cells;
+}
+function drawScoreCells(t, sc){
+  const fmt = drawFormatOf(t);
+  if(!sc) return [];
+  if(fmt==='sets2') return setsFromScore(sc, 'set');
+  return (sc.a!=='' && sc.b!=='' && sc.a!==undefined) ? [{a:sc.a, b:sc.b}] : [];
+}
+function drawScoreText(t, sc){
+  return drawScoreCells(t, sc).map(c=> (c.stb?'[':'') + c.a + '-' + c.b + (c.supA!==undefined?'('+c.supA+')':'') + (c.supB!==undefined?'('+c.supB+')':'') + (c.stb?']':'')).join(' ');
+}
 function drawHasScores(t){
-  return Object.keys(t.scores).some(k=> t.scores[k] && (t.scores[k].a!=='' || t.scores[k].b!==''));
+  return Object.keys(t.scores).some(k=> t.scores[k] && Object.values(t.scores[k]).some(v=> v!=='' && v!==undefined));
 }
 // Resuelve el cuadro: a/b = id de pareja, 0 = BYE, null = por definir
 function resolveDraw(t){
@@ -677,16 +826,17 @@ function resolveDraw(t){
       let a, b;
       if(r===0){ a = slots[2*m]; b = slots[2*m+1]; }
       else { a = rounds[r-1][2*m].winner; b = rounds[r-1][2*m+1].winner; }
-      const sc = t.scores[r+'-'+m] || {a:'',b:''};
-      let winner = null, auto = false, error = false;
+      const sc = t.scores[r+'-'+m];
+      let winner = null, auto = false, error = false, msg = '', needsTb = false, gamesA, gamesB;
       if(a===0 && b===0){ winner = 0; auto = true; }
       else if(a===0 && b>0){ winner = b; auto = true; }
       else if(b===0 && a>0){ winner = a; auto = true; }
-      else if(a>0 && b>0 && sc.a!=='' && sc.b!==''){
-        const na=Number(sc.a), nb=Number(sc.b);
-        if(na===nb) error = true; else winner = na>nb ? a : b;
+      else if(a>0 && b>0){
+        const res = drawMatchResult(t, sc);
+        error = !!res.error; msg = res.msg || ''; needsTb = !!res.needsTb; gamesA = res.gamesA; gamesB = res.gamesB;
+        if(res.winner) winner = res.winner==='A' ? a : b;
       }
-      round.push({a, b, winner, auto, error});
+      round.push({a, b, winner, auto, error, msg, needsTb, gamesA, gamesB});
     }
     rounds.push(round);
     count = count/2; r++;
@@ -699,7 +849,7 @@ function cascadeClear(t, old){
     const cur = resolveDraw(t);
     cur.rounds[r].forEach((m, mi)=>{
       const o = old.rounds[r][mi];
-      if(m.a!==o.a || m.b!==o.b) t.scores[r+'-'+mi] = {a:'', b:''};
+      if(m.a!==o.a || m.b!==o.b) t.scores[r+'-'+mi] = drawEmptyScore(drawFormatOf(t));
     });
   }
 }
@@ -712,8 +862,7 @@ function drawStats(t){
     round.forEach((m, mi)=>{
       if(m.winner===null || m.winner===0) return;
       if(!m.auto){
-        const sc = t.scores[r+'-'+mi];
-        const na=Number(sc.a), nb=Number(sc.b);
+        const na=m.gamesA, nb=m.gamesB;
         st[m.a].pj++; st[m.b].pj++;
         st[m.a].pf+=na; st[m.a].pc+=nb; st[m.b].pf+=nb; st[m.b].pc+=na;
       }
@@ -744,11 +893,11 @@ function drawMinutes(t, courts){
   let total = 0;
   res.rounds.forEach((round, r)=>{
     const real = round.filter(m=> !(m.a===0 || m.b===0)).length;
-    total += Math.ceil(real/courts)*45;
+    total += Math.ceil(real/courts)*drawMatchMinutes(t);
   });
   return total;
 }
-function makeDrawTournament(name, P, courts){
+function makeDrawTournament(name, P, courts, drawFormat){
   const S = drawSizeFor(P);
   const slots = defaultSlots(P, S);
   const players = {};
@@ -758,9 +907,10 @@ function makeDrawTournament(name, P, courts){
     name: name || 'Draw',
     mode: 'draw', N: P, courts, gamesPerMatch: null, groups: 1, groupSizes: [P],
     players, physRounds: [], totalMatches: P-1, fillerCount: 0, extraOpponentCount: 0,
+    drawFormat: (drawFormat==='one' || drawFormat==='short') ? drawFormat : 'sets2',
     draw: {size:S, pairs:P, slots}, scores: {}
   };
-  for(let r=0, c=S/2; c>=1; r++, c/=2) for(let m=0;m<c;m++) t.scores[r+'-'+m] = {a:'', b:''};
+  for(let r=0, c=S/2; c>=1; r++, c/=2) for(let m=0;m<c;m++) t.scores[r+'-'+m] = drawEmptyScore(t.drawFormat);
   return t;
 }
 
@@ -777,7 +927,7 @@ function activeTournament(){
 }
 
 function makeTournament(name, mode, N, courts, groups, games, setFormat, inscription){
-  if(mode === 'draw') return makeDrawTournament(name, N, courts);
+  if(mode === 'draw') return makeDrawTournament(name, N, courts, setFormat);
   const ensureOpponents = (mode === 'americano');
   const numGroups = (groups>1) ? groups : 1;
   const pairMode = (mode === 'regular' && inscription === 'pairs');
@@ -1023,6 +1173,8 @@ function renderNewFormatSummary(){
   document.getElementById('newSetFormat').classList.toggle('hidden', mode !== 'regular');
   document.getElementById('setField').classList.toggle('hidden', mode !== 'regular');
   document.getElementById('newInscription').classList.toggle('hidden', mode !== 'regular');
+  document.getElementById('newDrawFormat').classList.toggle('hidden', mode !== 'draw');
+  document.getElementById('drawFmtField').classList.toggle('hidden', mode !== 'draw');
   document.getElementById('inscField').classList.toggle('hidden', mode !== 'regular');
   const pairMode = (mode === 'regular' && document.getElementById('newInscription').value === 'pairs');
   document.getElementById('newGames').classList.toggle('hidden', mode !== 'americano');
@@ -1030,13 +1182,13 @@ function renderNewFormatSummary(){
 
   if(mode === 'draw'){
     const S = drawSizeFor(N), byes = S-N;
-    const tmp = makeDrawTournament('x', N, courts);
+    const tmp = makeDrawTournament('x', N, courts, document.getElementById('newDrawFormat').value);
     const mins = drawMinutes(tmp, courts);
     const h = Math.floor(mins/60), m = mins%60;
     document.getElementById('newFormatSummary').innerHTML =
       N + ' parejas &rarr; cuadro de ' + S + ' (' + drawRoundName(S/2) + ') &middot; ' + (N-1) + ' partidos &middot; ' +
       byes + ' bye(s)' + (byes>0 ? ' (pasan directo a la siguiente ronda; puedes cambiarlos en el sorteo)' : '') +
-      '<br>&asymp; ' + h + 'h' + (m?' '+m+'min':'') + ' con ' + courts + ' cancha(s) (45 min por partido). Avanza la pareja con el score más alto.';
+      '<br>&asymp; ' + h + 'h' + (m?' '+m+'min':'') + ' con ' + courts + ' cancha(s) (' + drawMatchMinutes(tmp) + ' min por partido). Formato: ' + drawFormatLabel(tmp.drawFormat) + '.';
     return;
   }
 
@@ -1077,7 +1229,7 @@ function renderNewFormatSummary(){
 function renderDrawSetup(t, grid){
   const P = t.draw.pairs, S = t.draw.size;
   const locked = drawHasScores(t);
-  const head = (txt)=>{ const h=document.createElement('div'); h.style.cssText='grid-column:1 / -1;font-weight:700;font-size:12.5px;color:var(--navy);margin-top:8px;'; h.textContent=txt; return h; };
+  const head = (txt)=>{ const h=document.createElement('div'); h.style.cssText='grid-column:1 / -1;font-weight:700;font-size:15px;color:var(--navy);margin-top:8px;'; h.textContent=txt; return h; };
   grid.appendChild(head('Parejas (escribe los nombres de cada pareja)'));
   for(let i=1;i<=P;i++){
     const wrap = document.createElement('div');
@@ -1172,7 +1324,7 @@ function renderPlayersGrid(){
     for(let gi=0; gi<numGroups; gi++){
       const {start, end} = groupPlayerRange(t, gi);
       const heading = document.createElement('div');
-      heading.style.cssText = 'grid-column:1 / -1;font-weight:700;font-size:12.5px;color:var(--navy);margin-top:8px;';
+      heading.style.cssText = 'grid-column:1 / -1;font-weight:700;font-size:15px;color:var(--navy);margin-top:8px;';
       heading.textContent = 'Grupo ' + String.fromCharCode(65+gi) + ' (' + ((end-start+1)/2) + ' parejas)';
       grid.appendChild(heading);
       for(let i=start; i<=end; i++) grid.appendChild(buildInput(i));
@@ -1181,7 +1333,7 @@ function renderPlayersGrid(){
     for(let gi=0; gi<numGroups; gi++){
       const {start, end} = groupPlayerRange(t, gi);
       const heading = document.createElement('div');
-      heading.style.cssText = 'grid-column:1 / -1;font-weight:700;font-size:12.5px;color:var(--navy);margin-top:8px;';
+      heading.style.cssText = 'grid-column:1 / -1;font-weight:700;font-size:15px;color:var(--navy);margin-top:8px;';
       heading.textContent = 'Grupo ' + String.fromCharCode(65+gi) + ' (' + (end-start+1) + ' jugadores)';
       grid.appendChild(heading);
       for(let i=start; i<=end; i++) grid.appendChild(buildInput(i));
@@ -1215,7 +1367,7 @@ function renderMetrics(){
     '<div class="metric"><div class="lbl">Partidos totales</div><div class="val">'+t.totalMatches+'</div></div>' +
     '<div class="metric"><div class="lbl">Rondas ('+t.courts+' cancha'+(t.courts>1?'s':'')+')</div><div class="val">'+rounds+'</div></div>' +
     '<div class="metric"><div class="lbl">Duración de juego</div><div class="val">'+h+'h'+(m?(' '+m+'m'):'')+'</div></div>' +
-    '<div class="metric"><div class="lbl">Modalidad</div><div class="val" style="font-size:13px;">'+(t.mode==='regular'?'Regular':'Americano')+'</div></div>';
+    '<div class="metric"><div class="lbl">Modalidad</div><div class="val" style="font-size:15.5px;">'+(t.mode==='regular'?'Regular':'Americano')+'</div></div>';
 
   const banner = document.getElementById('fillerBanner');
   const notes = [];
@@ -1277,52 +1429,140 @@ function scoreInputsHtml(mode, ri, ci, sc, readOnly, games, setFormat){
   );
 }
 
-function renderBracket(t, list){
+function bracketHtml(t, opts){
+  opts = opts || {};
   const res = resolveDraw(t);
-  const nm = (id, win)=> id===null ? '<i style="color:var(--muted)">Por definir</i>' :
-    (id===0 ? '<i style="color:var(--muted)">BYE</i>' : (win ? '<b>'+escapeHtml(playerName(t,id))+'</b>' : escapeHtml(playerName(t,id))));
+  const R = res.rounds.length, n0 = res.rounds[0].length;
+  const showId = (id)=> id===null ? '<span class="b-tbd">Por definir</span>' : (id===0 ? '<span class="b-tbd">BYE</span>' : escapeHtml(playerName(t,id)));
   let num = 0;
+  const numbers = res.rounds.map(round=> round.map(m=> (m.a===0||m.b===0) ? 0 : ++num));
+  let html = '<div class="bracket" style="--n0:'+n0+';">';
   res.rounds.forEach((round, r)=>{
-    const div = document.createElement('div'); div.className='round';
-    const head = document.createElement('div'); head.className='round-head';
-    head.innerHTML = '<span class="rn">'+drawRoundName(round.length)+'</span><span class="rt">'+round.length+' partido(s)</span>';
-    div.appendChild(head);
+    html += '<div class="b-col"><div class="b-title">'+drawRoundName(round.length)+'</div><div class="b-slots">';
     round.forEach((m, mi)=>{
-      const sc = t.scores[r+'-'+mi] || {a:'',b:''};
-      const canScore = m.a>0 && m.b>0;
-      const isBye = (m.a===0 || m.b===0);
-      const line = (id, side)=>
-        '<div class="pair-line"><span class="pair-names">'+nm(id, m.winner===id && id>0)+'</span>' +
-        (canScore ? '<input type="number" min="0" max="99" class="score-input" data-r="'+r+'" data-m="'+mi+'" data-side="'+side+'" value="'+sc[side]+'">' : '') + '</div>';
-      let st;
-      if(isBye) st = {cls:'ok', text:'Pasa directo (bye): ' + escapeHtml(playerName(t, m.winner))};
-      else if(m.error) st = {cls:'err', text:'Empate no permitido: debe haber un ganador'};
-      else if(m.winner) st = {cls:'ok', text:'Avanza: ' + escapeHtml(playerName(t, m.winner))};
-      else if(canScore) st = {cls:'pending', text:'Pendiente'};
-      else st = {cls:'pending', text:'Esperando rivales'};
-      const mdiv = document.createElement('div'); mdiv.className='match';
-      mdiv.innerHTML = '<span class="court">'+(isBye ? 'Bye' : 'Partido '+(++num))+'</span>' +
-        line(m.a,'a') + '<div class="vs">vs</div>' + line(m.b,'b') +
-        '<div class="status '+st.cls+'">'+st.text+'</div>';
-      div.appendChild(mdiv);
+      const sc = t.scores[r+'-'+mi];
+      const cells = (m.a>0 && m.b>0) ? drawScoreCells(t, sc) : [];
+      const canScore = m.a>0 && m.b>0 && !opts.print;
+      const rowHtml = (id, side)=>{
+        const win = m.winner!==null && m.winner===id && id>0;
+        const lose = m.winner!==null && m.winner!==id && id>0 && m.a>0 && m.b>0;
+        const sc2 = cells.map(c=>{
+          const v = side==='a' ? c.a : c.b, sup = side==='a' ? c.supA : c.supB;
+          const won = Number(c.a)!==Number(c.b) && ((side==='a') === (Number(c.a)>Number(c.b)));
+          return '<span class="b-set'+(won?' w':'')+(c.stb?' stb':'')+'">'+v+(sup!==undefined?'<sup>'+sup+'</sup>':'')+'</span>';
+        }).join('');
+        return '<div class="b-row'+(win?' win':'')+(lose?' lose':'')+'"><span class="b-name">'+showId(id)+'</span><span class="b-sc">'+sc2+'</span></div>';
+      };
+      const bye = (m.a===0 || m.b===0);
+      let foot = '';
+      if(m.error) foot = '<div class="b-foot err">'+escapeHtml(m.msg || 'Marcador inválido')+'</div>';
+      else if(canScore && !m.winner) foot = '<div class="b-foot">'+(m.needsTb ? 'Falta super tiebreak · ' : '')+'Toca para cargar el score</div>';
+      else if(canScore && m.winner) foot = '<div class="b-foot ok">Avanza: '+escapeHtml(playerName(t,m.winner))+'</div>';
+      html += '<div class="b-slot has-next'+(r>0?' has-prev':'')+' '+(mi%2===0?'top':'bot')+'">' +
+        (r>0 ? '<i class="ln-in"></i>' : '') +
+        '<div class="b-match'+(bye?' bye':'')+(canScore?' clickable':'')+'" data-r="'+r+'" data-m="'+mi+'">' +
+          '<div class="b-num">'+(numbers[r][mi] ? 'Partido '+numbers[r][mi] : (bye?'Bye':''))+'</div>' +
+          rowHtml(m.a,'a') + rowHtml(m.b,'b') + foot +
+        '</div>' +
+        '<i class="ln-out"></i>' + (r<R-1 ? '<i class="ln-v"></i>' : '') +
+        '</div>';
     });
-    list.appendChild(div);
+    html += '</div></div>';
   });
-  list.querySelectorAll('.score-input').forEach(inp=>{
-    inp.addEventListener('change', (e)=>{
-      const r = e.target.dataset.r, mi = e.target.dataset.m, side = e.target.dataset.side;
-      let v = e.target.value;
-      if(v!=='') v = Math.max(0, Math.min(99, Math.round(Number(v))));
-      const old = resolveDraw(t);
-      t.scores[r+'-'+mi][side] = v;
-      cascadeClear(t, old);
-      saveApp();
-      renderAll();
-    });
+  const finalM = res.rounds[R-1][0];
+  html += '<div class="b-col b-champcol"><div class="b-title">Campeón</div><div class="b-slots"><div class="b-slot has-prev"><i class="ln-in"></i><div class="b-champ">' +
+    (finalM.winner ? '&#127942; ' + escapeHtml(playerName(t,finalM.winner)) : '<span class="b-tbd">Por definir</span>') + '</div></div></div></div>';
+  html += '</div>';
+  return html;
+}
+
+function renderBracket(t, list){
+  const fmt = drawFormatOf(t);
+  list.innerHTML = '<div class="note" style="margin:0 0 8px;">Formato: '+escapeHtml(drawFormatLabel(fmt))+'. Toca un partido para cargar el score; avanza la pareja ganadora. Desliza hacia los lados para ver todo el cuadro.</div>' +
+    '<div class="bracket-wrap">' + bracketHtml(t) + '</div>';
+  list.querySelectorAll('.b-match.clickable').forEach(el=>{
+    el.addEventListener('click', ()=> openScoreModal(t, Number(el.dataset.r), Number(el.dataset.m)));
   });
 }
 
-function renderCalendario(){
+// Conserva la posición de la pantalla (y el scroll horizontal del cuadro) mientras se vuelve a dibujar
+function keepView(fn){
+  const y = window.scrollY;
+  const bw = document.querySelector('.bracket-wrap');
+  const sl = bw ? bw.scrollLeft : 0;
+  fn();
+  window.scrollTo(0, y);
+  const nb = document.querySelector('.bracket-wrap');
+  if(nb) nb.scrollLeft = sl;
+}
+
+function openScoreModal(t, r, mi){
+  const res0 = resolveDraw(t);
+  const m = res0.rounds[r][mi];
+  const fmt = drawFormatOf(t);
+  const key = r+'-'+mi;
+  const work = Object.assign(drawEmptyScore(fmt), t.scores[key] || {});
+  const back = document.createElement('div');
+  back.className = 'modal-back';
+  document.body.appendChild(back);
+  const nameA = escapeHtml(playerName(t,m.a)), nameB = escapeHtml(playerName(t,m.b));
+  const inp = (side, max)=> '<input type="number" inputmode="numeric" min="0" max="'+max+'" class="score-input m-in" data-side="'+side+'" value="'+(work[side]===undefined?'':work[side])+'">';
+  function body(){
+    const tmpT = {drawFormat: fmt};
+    const res = drawMatchResult(tmpT, work);
+    let inner = '';
+    if(fmt==='sets2'){
+      inner += '<div class="m-head"><span>'+nameA+'</span><span>'+nameB+'</span></div>';
+      [1,2].forEach(k=>{
+        inner += '<div class="m-row"><span class="m-lbl">Set '+k+'</span>'+inp('s'+k+'a',7)+'<span>-</span>'+inp('s'+k+'b',7)+'</div>';
+        const a = work['s'+k+'a'], b = work['s'+k+'b'];
+        if(a!=='' && b!=='' && setIsTiebreak(Number(a),Number(b),'set'))
+          inner += '<div class="m-row tb"><span class="m-lbl">Tiebreak set '+k+' (opcional)</span>'+inp('t'+k+'a',30)+'<span>-</span>'+inp('t'+k+'b',30)+'</div>';
+      });
+      if(res.needsTb) inner += '<div class="m-row tb"><span class="m-lbl">Super tiebreak a 10</span>'+inp('s3a',30)+'<span>-</span>'+inp('s3b',30)+'</div>';
+    } else {
+      inner += '<div class="m-row2"><span class="m-name">'+nameA+'</span>'+inp('a',fmt==='short'?5:(fmt==='one'?7:99))+'</div>' +
+               '<div class="m-row2"><span class="m-name">'+nameB+'</span>'+inp('b',fmt==='short'?5:(fmt==='one'?7:99))+'</div>';
+    }
+    let msg;
+    if(res.error) msg = '<span class="err">'+escapeHtml(res.msg||'Marcador inválido')+'</span>';
+    else if(res.complete) msg = '<span class="ok">Avanza: '+(res.winner==='A'?nameA:nameB)+'</span>';
+    else msg = (res.needsTb ? 'Falta el super tiebreak (1 set cada pareja)' : 'Completa el marcador');
+    return inner + '<div class="m-msg">'+msg+'</div>';
+  }
+  function draw(){
+    const act = document.activeElement;
+    const focusSide = act && act.classList && act.classList.contains('m-in') ? act.dataset.side : null;
+    back.innerHTML = '<div class="modal"><div class="m-title">'+drawRoundName(res0.rounds[r].length)+'</div>' +
+      '<div class="m-teams"><b>'+nameA+'</b> vs <b>'+nameB+'</b></div>' +
+      '<div class="m-body">'+body()+'</div>' +
+      '<div class="actions"><button type="button" class="secondary" id="mCancel">Cancelar</button>' +
+      '<button type="button" class="danger" id="mClear">Borrar</button><button type="button" id="mSave">Guardar</button></div></div>';
+    back.querySelectorAll('.m-in').forEach(i=>{
+      i.addEventListener('input', (e)=>{
+        let v = e.target.value;
+        if(v!==''){ v = Math.max(0, Math.min(Number(e.target.max), Math.round(Number(v)))); }
+        work[e.target.dataset.side] = v;
+        draw();
+      });
+    });
+    if(focusSide){ const f = back.querySelector('.m-in[data-side="'+focusSide+'"]'); if(f){ f.focus({preventScroll:true}); } }
+    back.querySelector('#mCancel').addEventListener('click', ()=> back.remove());
+    back.querySelector('#mClear').addEventListener('click', ()=>{ Object.keys(work).forEach(k=> work[k]=''); draw(); });
+    back.querySelector('#mSave').addEventListener('click', ()=>{
+      const old = resolveDraw(t);
+      t.scores[key] = Object.assign({}, work);
+      cascadeClear(t, old);
+      back.remove();
+      keepView(()=>{ saveApp(); renderAll(); });
+    });
+  }
+  back.addEventListener('click', (e)=>{ if(e.target===back) back.remove(); });
+  draw();
+  const first = back.querySelector('.m-in'); if(first) first.focus({preventScroll:true});
+}
+
+function renderCalendarioInner(){
   const list = document.getElementById('roundsList');
   const t = activeTournament();
   list.innerHTML = '';
@@ -1392,6 +1632,30 @@ function renderCalendario(){
   }
 }
 
+// Redibuja el calendario sin mover la pantalla: conserva el scroll y el campo que se está editando
+function renderCalendario(){
+  const list = document.getElementById('roundsList');
+  const y = window.scrollY;
+  const ae = document.activeElement;
+  const focusSel = (ae && ae.classList && ae.classList.contains('score-input') && ae.dataset && ae.dataset.round!==undefined && list.contains(ae))
+    ? '[data-round="'+ae.dataset.round+'"][data-court="'+ae.dataset.court+'"][data-side="'+ae.dataset.side+'"]' : null;
+  const hadContent = list.children.length > 0;
+  const bw = list.querySelector('.bracket-wrap');
+  const sl = bw ? bw.scrollLeft : 0;
+  if(hadContent) list.style.minHeight = list.offsetHeight + 'px';
+  renderCalendarioInner();
+  list.style.minHeight = '';
+  if(hadContent){
+    window.scrollTo(0, y);
+    const nb = list.querySelector('.bracket-wrap');
+    if(nb) nb.scrollLeft = sl;
+  }
+  if(focusSel){
+    const f = list.querySelector(focusSel);
+    if(f){ try{ f.focus({preventScroll:true}); }catch(e){ f.focus(); } }
+  }
+}
+
 function rankTableHtml(rows, heading, showGroup){
   let html = '<div class="card">';
   if(heading) html += '<h2>'+escapeHtml(heading)+'</h2>';
@@ -1420,7 +1684,7 @@ function drawRankingHtml(t){
   const {rows} = drawStats(t);
   const champ = rows.find(r=>r.champion);
   let html = '<div class="card"><h2>Resultado final del draw</h2>';
-  html += champ ? '<div style="font-size:15px;margin-bottom:8px;">&#127942; Campeón: <b>'+escapeHtml(champ.name)+'</b></div>'
+  html += champ ? '<div style="font-size:18px;margin-bottom:8px;">&#127942; Campeón: <b>'+escapeHtml(champ.name)+'</b></div>'
                 : '<div class="note" style="margin-bottom:8px;">El campeón se define al cargar el score de la final.</div>';
   html += '<table class="rank"><thead><tr><th>#</th><th>Pareja</th><th>Fase</th><th style="text-align:right">PJ</th>' +
     '<th style="text-align:right">PF</th><th style="text-align:right">PC</th></tr></thead><tbody>';
@@ -1459,6 +1723,145 @@ function renderAll(){
   renderMetrics();
   renderCalendario();
   renderRanking();
+  renderQueries();
+}
+
+
+/* ============ Consultas (pendientes y resultados por jugador / pareja) ============ */
+function pairKeyOf(arr){ return arr.slice().sort((x,y)=>x-y).join('-'); }
+function pairNameOf(t, arr){ return arr.map(i=>playerName(t,i)).join(' / '); }
+
+// Lista unificada de partidos del torneo activo, con su resultado
+function collectMatches(t){
+  const out = [];
+  if(t.mode==='draw'){
+    const res = resolveDraw(t);
+    res.rounds.forEach((round, r)=>{
+      round.forEach((m, mi)=>{
+        if(!(m.a>0 && m.b>0)) return;
+        const sc = t.scores[r+'-'+mi];
+        out.push({roundLabel: drawRoundName(round.length), roundIdx: r, court: null, groupText:'', tag:'',
+          a:[m.a], b:[m.b], complete: m.winner!==null, winner: m.winner===null ? null : (m.winner===m.a?'A':'B'),
+          gamesA: m.gamesA, gamesB: m.gamesB, cells: m.winner!==null ? drawScoreCells(t, sc) : []});
+      });
+    });
+    return out;
+  }
+  t.physRounds.forEach((round, ri)=>{
+    round.forEach((m, ci)=>{
+      if(!m) return;
+      const sc = t.scores[ri+'-'+ci];
+      const res = computeMatchResult(t.mode, sc, gamesOf(t), t.setFormat);
+      let cells = [];
+      if(res.complete){
+        cells = t.mode==='americano' ? [{a:sc.ga, b:sc.gb}] : setsFromScore(sc, t.setFormat || 'set');
+      }
+      out.push({roundLabel:'Ronda '+(ri+1), roundIdx:ri, court:ci+1,
+        groupText: (t.groups||1)>1 ? groupBadgeText(m) : '',
+        tag: m.filler ? 'Relleno' : (m.extraOpponent ? 'Extra rival' : ''),
+        a:m.a, b:m.b, complete:res.complete, winner: res.complete ? (res.winner||null) : null,
+        gamesA:res.gamesA, gamesB:res.gamesB, cells});
+    });
+  });
+  return out;
+}
+function cellsText(cells, side){
+  return cells.map(c=>{
+    const flip = side==='B';
+    const x = flip ? c.b : c.a, y = flip ? c.a : c.b;
+    const supX = flip ? c.supB : c.supA, supY = flip ? c.supA : c.supB;
+    return (c.stb?'[':'') + x + (supX!==undefined?'('+supX+')':'') + '-' + y + (supY!==undefined?'('+supY+')':'') + (c.stb?']':'');
+  }).join(' ');
+}
+function queryEntities(t, scope){
+  if(t.mode==='draw'){
+    const L = []; for(let i=1;i<=t.draw.pairs;i++) L.push({val:String(i), name:playerName(t,i), ids:[i]});
+    return scope==='par' ? L : [];
+  }
+  if(scope==='jug'){
+    const L = []; for(let i=1;i<=t.N;i++) L.push({val:String(i), name:playerName(t,i), ids:[i]});
+    return L;
+  }
+  const seen = new Map();
+  collectMatches(t).forEach(m=>[m.a,m.b].forEach(p=>{ const k=pairKeyOf(p); if(!seen.has(k)) seen.set(k,{val:k, name:pairNameOf(t,p), ids:p.slice().sort((x,y)=>x-y)}); }));
+  return Array.from(seen.values()).sort((x,y)=>x.name.localeCompare(y.name,'es'));
+}
+const QUERY_LABELS = {'pend-jug':'Partidos pendientes por jugador','pend-par':'Partidos pendientes por pareja','res-jug':'Resultados por jugador','res-par':'Resultados por pareja'};
+
+function buildQuery(t, type, entVal){
+  const pending = type.startsWith('pend'), scope = type.endsWith('jug') ? 'jug' : 'par';
+  const matches = collectMatches(t);
+  let ents = queryEntities(t, scope);
+  if(entVal && entVal!=='all') ents = ents.filter(e=>e.val===entVal);
+  const sections = [];
+  ents.forEach(e=>{
+    const rows = [];
+    let pj=0, pg=0, pp=0, pe=0, gf=0, gc=0;
+    matches.forEach(m=>{
+      let side = null;
+      if(scope==='jug'){ if(m.a.includes(e.ids[0])) side='A'; else if(m.b.includes(e.ids[0])) side='B'; }
+      else { const k = e.val; if(pairKeyOf(m.a)===k) side='A'; else if(pairKeyOf(m.b)===k) side='B'; }
+      if(!side) return;
+      const mine = side==='A' ? m.a : m.b, rival = side==='A' ? m.b : m.a;
+      const partner = scope==='jug' ? mine.filter(i=>i!==e.ids[0]) : [];
+      const rivalTxt = escapeHtml(pairNameOf(t, rival));
+      const withTxt = partner.length ? ('con <b>'+escapeHtml(pairNameOf(t,partner))+'</b> ') : '';
+      const where = m.court ? ('Cancha '+m.court) : '';
+      const extra = [m.groupText, m.tag].filter(Boolean).join(' · ');
+      if(pending){
+        if(m.complete) return;
+        rows.push([escapeHtml(m.roundLabel), escapeHtml(where), escapeHtml(extra), withTxt+'vs <b>'+rivalTxt+'</b>']);
+      } else {
+        if(!m.complete) return;
+        pj++;
+        const mineG = side==='A' ? m.gamesA : m.gamesB, rivG = side==='A' ? m.gamesB : m.gamesA;
+        gf += mineG; gc += rivG;
+        let outcome;
+        if(m.winner===null){ pe++; outcome = '<span>Empate</span>'; }
+        else if(m.winner===side){ pg++; outcome = '<span class="qwin">Ganó</span>'; }
+        else { pp++; outcome = '<span class="qlose">Perdió</span>'; }
+        rows.push([escapeHtml(m.roundLabel), escapeHtml(extra), withTxt+'vs <b>'+rivalTxt+'</b>', escapeHtml(cellsText(m.cells, side)), outcome]);
+      }
+    });
+    const headers = pending ? ['Ronda','Cancha','Grupo','Partido'] : ['Ronda','Grupo','Partido','Score','Resultado'];
+    const summary = pending
+      ? (rows.length + (rows.length===1?' partido pendiente':' partidos pendientes'))
+      : (pj + ' jugado' + (pj===1?'':'s') + ' · ' + pg + ' ganado' + (pg===1?'':'s') + ' · ' + pp + ' perdido' + (pp===1?'':'s') +
+         (pe ? ' · '+pe+' empate'+(pe===1?'':'s') : '') + ' · games a favor ' + gf + ' / en contra ' + gc);
+    sections.push({heading:e.name, summary, headers, rows, empty: pending ? 'Sin partidos pendientes.' : 'Todavía no hay resultados cargados.'});
+  });
+  return {title: QUERY_LABELS[type], sections};
+}
+function queryToHtml(q, forPrint){
+  if(q.sections.length===0) return '<div class="note">No hay datos para esta consulta.</div>';
+  return q.sections.map(sec=>{
+    const table = sec.rows.length===0 ? '<div class="note" style="margin-bottom:6px;">'+sec.empty+'</div>' :
+      '<table class="'+(forPrint?'':'qt')+'"><thead><tr>'+sec.headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>' +
+      sec.rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('') + '</tbody></table>';
+    const head = forPrint ? '<h3 style="margin:16px 0 2px;">'+escapeHtml(sec.heading)+'</h3><div class="pr-meta" style="margin-bottom:6px;">'+sec.summary+'</div>'
+                          : '<h2>'+escapeHtml(sec.heading)+'</h2><div class="qsum">'+sec.summary+'</div>';
+    return forPrint ? (head+table) : ('<div class="card">'+head+table+'</div>');
+  }).join('');
+}
+const qState = {type:'pend-jug', ent:'all'};
+function renderQueries(){
+  const t = activeTournament();
+  const box = document.getElementById('queryResult');
+  const typeSel = document.getElementById('qType'), entSel = document.getElementById('qEntity');
+  if(!box) return;
+  if(!t){ box.innerHTML = '<div class="note">Crea o selecciona un torneo para hacer consultas.</div>'; entSel.innerHTML=''; return; }
+  // en el draw solo hay parejas
+  [...typeSel.options].forEach(o=>{ o.hidden = (t.mode==='draw' && o.value.endsWith('jug')); o.disabled = o.hidden; });
+  if(t.mode==='draw' && qState.type.endsWith('jug')) qState.type = qState.type.replace('jug','par');
+  typeSel.value = qState.type;
+  const scope = qState.type.endsWith('jug') ? 'jug' : 'par';
+  document.getElementById('qEntLabel').textContent = scope==='jug' ? 'Jugador' : 'Pareja';
+  const ents = queryEntities(t, scope);
+  entSel.innerHTML = '<option value="all">' + (scope==='jug' ? 'Todos los jugadores' : 'Todas las parejas') + '</option>' +
+    ents.map(e=>'<option value="'+e.val+'">'+escapeHtml(e.name)+'</option>').join('');
+  if(qState.ent!=='all' && !ents.some(e=>e.val===qState.ent)) qState.ent = 'all';
+  entSel.value = qState.ent;
+  box.innerHTML = queryToHtml(buildQuery(t, qState.type, qState.ent), false);
 }
 
 /* ============ Eventos: tabs, selector de torneo, login ============ */
@@ -1467,10 +1870,21 @@ document.querySelectorAll('.tab').forEach(t=>{
     if(t.classList.contains('hidden')) return;
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
-    ['config','calendario','ranking','sync'].forEach(id=>{
+    if(t.dataset.tab==='consultas') renderQueries();
+    ['config','calendario','ranking','consultas','sync'].forEach(id=>{
       document.getElementById('tab-'+id).classList.toggle('hidden', id!==t.dataset.tab);
     });
   });
+});
+
+document.getElementById('qType').addEventListener('change', (e)=>{ qState.type = e.target.value; qState.ent = 'all'; renderQueries(); });
+document.getElementById('qEntity').addEventListener('change', (e)=>{ qState.ent = e.target.value; renderQueries(); });
+document.getElementById('btnPdfQuery').addEventListener('click', ()=>{
+  const t = activeTournament();
+  if(!t) return;
+  const q = buildQuery(t, qState.type, qState.ent);
+  openPrintWindow(q.title, '<h1>' + escapeHtml(q.title) + ' — ' + escapeHtml(t.name) + '</h1><div class="pr-meta">' +
+    escapeHtml(modeLabel(t, true)) + ' &middot; generado el ' + new Date().toLocaleString() + '</div>' + queryToHtml(q, true));
 });
 
 document.getElementById('tournamentSelector').addEventListener('change', (e)=>{
@@ -1484,6 +1898,7 @@ document.getElementById('newGroups').addEventListener('change', renderNewFormatS
 document.getElementById('newGames').addEventListener('change', renderNewFormatSummary);
 document.getElementById('newSetFormat').addEventListener('change', renderNewFormatSummary);
 document.getElementById('newInscription').addEventListener('change', renderNewFormatSummary);
+document.getElementById('newDrawFormat').addEventListener('change', renderNewFormatSummary);
 
 document.getElementById('btnCreateTournament').addEventListener('click', ()=>{
   const name = document.getElementById('newTournamentName').value.trim() || ('Torneo ' + (app.order.length+1));
@@ -1492,7 +1907,7 @@ document.getElementById('btnCreateTournament').addEventListener('click', ()=>{
   const courts = Number(document.getElementById('newCourtCount').value);
   const groups = (mode !== 'draw') ? Number(document.getElementById('newGroups').value) : 1;
   const games = Number(document.getElementById('newGames').value);
-  const setFormat = document.getElementById('newSetFormat').value;
+  const setFormat = (mode === 'draw') ? document.getElementById('newDrawFormat').value : document.getElementById('newSetFormat').value;
   const inscription = document.getElementById('newInscription').value;
   const result = createTournament(name, mode, N, courts, groups, games, setFormat, inscription);
   const statusEl = document.getElementById('createStatus');
@@ -1589,24 +2004,24 @@ document.getElementById('btnImport').addEventListener('click', ()=>{
 /* ============ Generar PDF (diálogo de impresión nativo, sin librerías, offline) ============ */
 const PRINT_STYLES = `
   body{font-family:Arial,Helvetica,sans-serif;color:#20232A;padding:22px;}
-  h1{font-size:19px;color:#1F2937;margin:0 0 4px;}
-  .pr-meta{font-size:11.5px;color:#6B7280;margin-bottom:16px;}
+  h1{font-size:23px;color:#1F2937;margin:0 0 4px;}
+  .pr-meta{font-size:14px;color:#6B7280;margin-bottom:16px;}
   .pr-round{margin-bottom:12px;page-break-inside:avoid;}
-  .pr-round h3{font-size:12.5px;color:#1F2937;background:#F5F4EF;padding:5px 8px;border-radius:4px;margin:0 0 6px;}
-  .pr-resting{font-size:10px;color:#6B7280;margin-bottom:4px;}
-  .pr-match{font-size:11.5px;padding:5px 2px;border-bottom:1px dashed #E4E2D8;}
-  .pr-court{font-size:9.5px;font-weight:bold;color:#B8960B;margin-right:6px;}
-  .pr-filler{font-size:9.5px;color:#D85A30;}
+  .pr-round h3{font-size:15px;color:#1F2937;background:#F5F4EF;padding:5px 8px;border-radius:4px;margin:0 0 6px;}
+  .pr-resting{font-size:12px;color:#6B7280;margin-bottom:4px;}
+  .pr-match{font-size:14px;padding:5px 2px;border-bottom:1px dashed #E4E2D8;}
+  .pr-court{font-size:11.5px;font-weight:bold;color:#B8960B;margin-right:6px;}
+  .pr-filler{font-size:11.5px;color:#D85A30;}
   .pr-score{float:right;font-weight:bold;}
-  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
   th,td{border:1px solid #E4E2D8;padding:6px 8px;text-align:left;}
-  th{background:#1F2937;color:#fff;font-size:10.5px;}
+  th{background:#1F2937;color:#fff;font-size:12.5px;}
   td.num, th.num{text-align:right;}
   tr:nth-child(even) td{background:#FAFAF7;}
   @page{margin:16mm;}
 `;
 
-function openPrintWindow(title, bodyHtml){
+function openPrintWindow(title, bodyHtml, extraCss){
   const w = window.open('', '_blank');
   if(!w){
     alert('El navegador bloqueó la ventana de impresión. Habilita ventanas emergentes para este sitio e inténtalo de nuevo.');
@@ -1614,7 +2029,7 @@ function openPrintWindow(title, bodyHtml){
   }
   w.document.write(
     '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + escapeHtml(title) + '</title>' +
-    '<style>' + PRINT_STYLES + '</style></head><body>' + bodyHtml + '</body></html>'
+    '<style>' + PRINT_STYLES + (extraCss||'') + '</style></head><body>' + bodyHtml + '</body></html>'
   );
   w.document.close();
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 250);
@@ -1639,24 +2054,14 @@ document.getElementById('btnPdfSchedule').addEventListener('click', ()=>{
   const t = activeTournament();
   if(!t) return;
   if(t.mode==='draw'){
-    const res = resolveDraw(t);
-    const nmP = (id)=> id===null ? 'Por definir' : (id===0 ? 'BYE' : escapeHtml(playerName(t,id)));
-    let rh = '', num = 0;
-    res.rounds.forEach((round, r)=>{
-      rh += '<div class="pr-round"><h3>' + drawRoundName(round.length) + '</h3>';
-      round.forEach((m, mi)=>{
-        const sc = t.scores[r+'-'+mi];
-        const bye = (m.a===0 || m.b===0);
-        const scoreText = bye ? 'Pasa directo' : ((sc.a!=='' && sc.b!=='') ? (sc.a+' - '+sc.b) : '___ - ___');
-        rh += '<div class="pr-match"><span class="pr-court">' + (bye ? 'Bye' : 'Partido ' + (++num)) + '</span>' +
-          '<span class="pr-score">' + scoreText + '</span><br><b>' + nmP(m.a) + '</b> vs <b>' + nmP(m.b) + '</b>' +
-          (m.winner ? ' &rarr; avanza <b>' + nmP(m.winner) + '</b>' : '') + '</div>';
-      });
-      rh += '</div>';
-    });
+    const R = Math.log2(t.draw.size);              // columnas = rondas + campeón
+    const cols = R + 1, width = cols*280, height = (t.draw.size/2)*150 + 60;
+    const zoom = Math.min(1, 1000/width, 640/height);
     openPrintWindow('Cuadro del Draw',
       '<h1>Cuadro del Draw — ' + escapeHtml(t.name) + '</h1><div class="pr-meta">Eliminación directa &middot; ' +
-      t.draw.pairs + ' parejas &middot; cuadro de ' + t.draw.size + ' &middot; ' + (t.draw.size-t.draw.pairs) + ' bye(s)</div>' + rh);
+      t.draw.pairs + ' parejas &middot; cuadro de ' + t.draw.size + ' &middot; ' + (t.draw.size-t.draw.pairs) + ' bye(s) &middot; ' +
+      escapeHtml(drawFormatLabel(drawFormatOf(t))) + '</div><div style="zoom:' + zoom.toFixed(3) + ';">' + bracketHtml(t, {print:true}) + '</div>',
+      BRACKET_CSS + ' @page{size:landscape;margin:10mm;} .bracket-wrap{overflow:visible;}');
     return;
   }
   let roundsHtml = '';
